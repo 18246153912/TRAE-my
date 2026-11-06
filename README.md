@@ -1,5 +1,13 @@
-# Vue 3 + TypeScript + Vite
+# TRAE-my
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+我的 TRAE 项目集合仓库。
 
-Learn more about the recommended Project Setup and IDE Support in the [Vue Docs TypeScript Guide](https://vuejs.org/guide/typescript/overview.html#project-setup).
+## 连接信息
+
+- GitHub 账号：[18246153912](https://github.com/18246153912)
+- 连接方式：SSH (`git@github.com`)
+- 本机 git 身份：`18246153912 <782099856@qq.com>`
+
+## 用途
+
+用于托管通过 TRAE IDE 开发的各类项目，每个项目独立目录或独立仓库管理。
