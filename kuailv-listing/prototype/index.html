@@ -421,6 +421,57 @@
   .status.listed { background: #f0f9eb; color: #67c23a; }
   .status.offline { background: #f4f4f5; color: #909399; }
 
+  /* ===== 真机助手：跟随模式 ===== */
+  .follow-card {
+    background: #ecf3ff;
+    border: 1px solid #1f5dd0;
+    border-radius: 10px;
+    padding: 18px 20px;
+    margin-bottom: 14px;
+  }
+  .follow-head { display: flex; align-items: center; gap: 12px; }
+  .follow-step-no {
+    width: 34px; height: 34px;
+    background: #1f5dd0; color: #fff;
+    border-radius: 50%;
+    font-size: 16px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .follow-title { font-size: 17px; font-weight: 600; color: #1f2937; }
+  .follow-tip { font-size: 12px; color: #6b7280; margin-top: 2px; }
+  .follow-progress { margin-left: auto; font-size: 13px; color: #1f5dd0; font-weight: 600; }
+  .follow-value {
+    background: #fff;
+    border: 1px solid #d6e4ff;
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin: 14px 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1f2937;
+    line-height: 1.6;
+    word-break: break-all;
+    min-height: 28px;
+  }
+  .follow-actions { display: flex; gap: 10px; }
+  .follow-list { border: 1px solid #ebeef5; border-radius: 8px; overflow: hidden; }
+  .follow-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px;
+    border-bottom: 1px solid #f2f6fc;
+    cursor: pointer;
+    font-size: 13px;
+  }
+  .follow-item:last-child { border-bottom: none; }
+  .follow-item:hover { background: #f8fafc; }
+  .follow-item.current { background: #ecf3ff; }
+  .follow-item.done { color: #c0c4cc; }
+  .fi-no { width: 22px; height: 22px; border-radius: 50%; background: #f4f4f5; color: #909399; font-size: 11px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .follow-item.current .fi-no { background: #1f5dd0; color: #fff; }
+  .fi-name { width: 110px; flex-shrink: 0; font-weight: 500; }
+  .fi-val { color: #909399; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
   /* ===== 通用 ===== */
   .flex { display: flex; }
   .gap-8 { gap: 8px; }
@@ -479,6 +530,9 @@
       </div>
       <div class="nav-item" :class="{active: tab === 'job'}" @click="tab = 'job'">
         📋 上架作业单
+      </div>
+      <div class="nav-item" :class="{active: tab === 'assist'}" @click="tab = 'assist'">
+        📱 真机助手
       </div>
       <div class="nav-item" :class="{active: tab === 'history'}" @click="tab = 'history'">
         📊 历史查询
@@ -1091,6 +1145,112 @@
         </div>
       </div>
 
+      <!-- ========== 真机助手 ========== -->
+      <div v-if="tab === 'assist'">
+        <div class="page-card">
+          <div class="page-title">真机助手（半自动上架）</div>
+          <div class="page-sub">手机 USB 连电脑 → scrcpy 投屏到电脑 → 鼠标键盘操作手机；图片由本页自动推送到手机相册，字段一键复制后粘贴输入</div>
+        </div>
+
+        <!-- 设备状态 -->
+        <div class="page-card">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <span style="font-size:15px;font-weight:600;">🔌 设备连接</span>
+            <span v-if="deviceStatus.checked" :class="'status ' + (deviceStatus.connected ? 'listed' : 'rejected')">
+              {{ deviceStatus.connected ? '已连接 ' + deviceStatus.model : '未检测到设备' }}
+            </span>
+            <span v-else class="status draft">未检测</span>
+            <el-button size="small" type="primary" @click="checkDevice">检测设备</el-button>
+            <span class="text-muted text-small">需先启动桥接服务（双击 phone-bridge/start_bridge.bat）</span>
+          </div>
+          <div v-if="deviceStatus.checked && !deviceStatus.connected" style="margin-top:10px;font-size:12px;color:#909399;line-height:1.8;">
+            排查步骤：① 手机插数据线连电脑 ② 手机「设置→关于手机」连点7次版本号开启开发者模式 ③ 开发者选项里打开「USB 调试」 ④ 手机弹窗点「允许调试」 ⑤ 再点检测
+          </div>
+        </div>
+
+        <!-- 跟随模式 -->
+        <div class="page-card">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+            <span style="font-size:15px;font-weight:600;">🎯 跟随模式</span>
+            <el-select v-model="followId" placeholder="选择待上架商品" size="small" style="width:320px;">
+              <el-option v-for="item in assistableList" :key="item.id" :label="item.spuName" :value="item.id" />
+            </el-select>
+            <span v-if="followItem" class="text-muted text-small">步骤 {{ followIdx + 1 }} / {{ followSteps.length }}</span>
+          </div>
+
+          <template v-if="followItem">
+            <!-- 当前步骤大卡 -->
+            <div class="follow-card">
+              <div class="follow-head">
+                <span class="follow-step-no">{{ followIdx + 1 }}</span>
+                <div>
+                  <div class="follow-title">{{ followSteps[followIdx].name }}</div>
+                  <div class="follow-tip">{{ followSteps[followIdx].tip }}</div>
+                </div>
+                <span class="follow-progress">{{ followIdx + 1 }}/{{ followSteps.length }}</span>
+              </div>
+              <div class="follow-value">{{ followSteps[followIdx].value || '（空）' }}</div>
+              <div class="follow-actions">
+                <el-button size="default" @click="followIdx = Math.max(0, followIdx - 1)">← 上一步</el-button>
+                <el-button size="default" type="primary" @click="copyText(followSteps[followIdx].value)" :disabled="!followSteps[followIdx].value">📋 复制本字段</el-button>
+                <el-button size="default" @click="followNext">下一步 →</el-button>
+              </div>
+            </div>
+
+            <!-- 步骤总览 -->
+            <div class="follow-list">
+              <div
+                v-for="(s, i) in followSteps"
+                :key="i"
+                class="follow-item"
+                :class="{done: i < followIdx, current: i === followIdx}"
+                @click="followIdx = i"
+              >
+                <span class="fi-no">{{ i + 1 }}</span>
+                <span class="fi-name">{{ s.name }}</span>
+                <span class="fi-val">{{ s.value }}</span>
+              </div>
+            </div>
+          </template>
+          <div v-else style="padding:30px;text-align:center;color:#c0c4cc;font-size:13px;">← 先选择一个商品开始跟随上架</div>
+        </div>
+
+        <!-- 图片推送 -->
+        <div class="page-card">
+          <div style="font-size:15px;font-weight:600;margin-bottom:12px;">📷 图片推送到手机相册</div>
+          <div class="history-toolbar">
+            <el-select v-model="pushId" placeholder="选择商品" size="small" style="width:280px;">
+              <el-option v-for="item in assistableList" :key="item.id" :label="item.spuName" :value="item.id" />
+            </el-select>
+            <el-button size="small" @click="pickImages">选择本地图片</el-button>
+            <el-button size="small" type="primary" :disabled="!pushFiles.length || !deviceStatus.connected" @click="pushImages">
+              ⬆ 推送 {{ pushFiles.length || '' }} 张到手机
+            </el-button>
+            <input type="file" ref="pushInput" accept="image/*" multiple style="display:none" @change="handlePickImages" />
+            <span v-if="pushId" class="text-muted text-small">命名规则：KL{{ pushId.slice(-6).toUpperCase() }}-01.jpg …，推送后自动清理手机 KLPush 目录</span>
+          </div>
+          <div v-if="pushFiles.length" class="imgs-row">
+            <div v-for="(f, i) in pushFiles" :key="i" class="img-card">
+              <img :src="f.preview" />
+              <span class="order-badge">#{{ i + 1 }}</span>
+            </div>
+          </div>
+          <div class="mt-8 text-muted text-small">推送到手机 /sdcard/Pictures/KLPush/ 并触发相册刷新，快驴 App 上传图片时在相册里按文件名排序即可选到。</div>
+        </div>
+
+        <!-- 环境指引 -->
+        <div class="page-card">
+          <div style="font-size:15px;font-weight:600;margin-bottom:8px;">🛠 明天拿到手机后的环境搭建（一次性的）</div>
+          <div style="font-size:13px;color:#606266;line-height:2;">
+            ① 下载 <b>platform-tools（adb）</b>：https://dl.google.com/android/repository/platform-tools-latest-windows.zip → 解压到 D:\tools\platform-tools，把该目录加入 PATH，或直接放在 phone-bridge 目录旁<br/>
+            ② 下载 <b>scrcpy</b>（投屏）：https://github.com/Genymobile/scrcpy/releases → 解压到 D:\tools\scrcpy，双击 scrcpy.exe 即投屏，鼠标=触摸、键盘=输入、Ctrl+V=粘贴<br/>
+            ③ 手机：开启开发者模式 + USB 调试（见上方排查步骤），首次连接在手机弹窗点「始终允许」<br/>
+            ④ 双击 phone-bridge/start_bridge.bat 启动桥接服务（保持窗口开着）<br/>
+            ⑤ 回到本页点「检测设备」，显示已连接即环境就绪
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -1588,6 +1748,96 @@ const app = createApp({
       };
     }
 
+    /* 真机助手 */
+    const BRIDGE = 'http://localhost:5175';
+    const deviceStatus = reactive({ checked: false, connected: false, model: '' });
+    const followId = ref('');
+    const followIdx = ref(0);
+    const pushId = ref('');
+    const pushFiles = ref([]);
+    const pushInput = ref(null);
+
+    const assistableList = computed(() => data.items.filter(i => i.status === 'ready' || i.status === 'listed'));
+    const followItem = computed(() => data.items.find(i => i.id === followId.value) || null);
+    const followSteps = computed(() => buildFollowSteps(followItem.value));
+
+    function klCode(item) { return item.id.slice(-6).toUpperCase(); }
+    function buildFollowSteps(item) {
+      if (!item) return [];
+      const rv = item.review || {};
+      const shelf = (rv.shelfLife || '无保质期') + (rv.shelfLife === '自定义' ? `（${rv.shelfLifeCustom || ''}）` : '');
+      const code = klCode(item);
+      return [
+        { name: '类目', tip: '逐级展开选择到最末级「餐盒」', value: rv.categoryPath || '' },
+        { name: 'SPU 名称', tip: '点输入框 → 粘贴（scrcpy 里 Ctrl+V）', value: item.spuName },
+        { name: '品牌', tip: '下拉/搜索选择', value: item.brand },
+        { name: '事业部别名', tip: '选填，不同地区俗称', value: rv.buAlias || '' },
+        { name: 'SKU 名称', tip: '规格信息里第一个输入框', value: item.listingSkuName },
+        { name: 'SKU 标题', tip: 'SKU 展开后的标题栏', value: item.listingSkuTitle },
+        { name: '规格/内包装', tip: '内包装规格', value: `${item.size} ${item.compartments}` },
+        { name: '箱规/外包装', tip: '外包装数量', value: item.boxQty },
+        { name: '毛重(kg)', tip: '整箱毛重', value: rv.grossWeight ? rv.grossWeight + ' kg' : '' },
+        { name: '保质期', tip: '餐盒选「无保质期」', value: shelf },
+        { name: '运输方式', tip: '塑料餐盒→常温运输', value: rv.transport || '' },
+        { name: '贮存方式', tip: '常温', value: rv.storage || '' },
+        { name: '条形码', tip: '无条码填 000', value: item.barcode || '000' },
+        { name: '上传标签图', tip: `相册 KLPush 目录选 ${code}-01 标签图`, value: '在手机相册选图' },
+        { name: '上传主图/实拍', tip: `按序选 ${code}-02 起的实拍图`, value: `共 ${item.realPhotos.length} 张` },
+        { name: '详情文案', tip: '粘贴到详情/描述', value: [rv.sellingPoints, rv.sceneText, rv.specTable].filter(Boolean).join(' ') },
+        { name: '保存并发布', tip: '发布成功后回作业单回填商品链接', value: '点【保存】→【提交发布】' },
+      ];
+    }
+    function followNext() {
+      if (followIdx.value >= followSteps.value.length - 1) {
+        ElementPlus.ElMessage.success('全部步骤完成，去「上架作业单」回填快驴商品链接');
+        return;
+      }
+      followIdx.value++;
+    }
+    async function checkDevice() {
+      try {
+        const r = await fetch(BRIDGE + '/api/device', { signal: AbortSignal.timeout(4000) });
+        const j = await r.json();
+        deviceStatus.checked = true;
+        deviceStatus.connected = !!j.connected;
+        deviceStatus.model = j.model || '';
+      } catch (e) {
+        deviceStatus.checked = true;
+        deviceStatus.connected = false;
+        ElementPlus.ElMessage.error('桥接服务未启动，请双击 phone-bridge/start_bridge.bat');
+      }
+    }
+    function pickImages() { pushInput.value?.click(); }
+    function handlePickImages(e) {
+      const files = [...(e.target.files || [])];
+      if (!files.length) return;
+      Promise.all(files.map(f => new Promise(res => {
+        const r = new FileReader();
+        r.onload = () => res({ name: f.name, data: r.result });
+        r.readAsDataURL(f);
+      }))).then(list => { pushFiles.value = list; e.target.value = ''; });
+    }
+    async function pushImages() {
+      const item = data.items.find(i => i.id === pushId.value);
+      if (!item || !pushFiles.value.length) return;
+      try {
+        const resp = await fetch(BRIDGE + '/api/push', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: klCode(item), files: pushFiles.value }),
+        });
+        const j = await resp.json();
+        if (j.ok) {
+          ElementPlus.ElMessage.success(`已推送 ${j.count} 张到手机相册 KLPush 目录`);
+          pushFiles.value = [];
+        } else {
+          ElementPlus.ElMessage.error('推送失败：' + (j.error || '未知错误'));
+        }
+      } catch (e) {
+        ElementPlus.ElMessage.error('桥接服务未响应，请确认 start_bridge.bat 已运行');
+      }
+    }
+
     onMounted(() => { saveData(); });
 
     return {
@@ -1599,6 +1849,8 @@ const app = createApp({
       copyText, copyAll, downloadImages, markListed,
       historyFilter, filteredHistory, formatTime, statusLabel,
       detailVisible, detailItem, viewDetail, offlineItem, relistItem, deleteItem,
+      deviceStatus, checkDevice, followId, followIdx, followItem, followSteps, followNext,
+      assistableList, pushId, pushFiles, pushInput, pickImages, handlePickImages, pushImages,
       categoryOptions: CATEGORY_TREE,
     };
   }
