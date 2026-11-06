@@ -1,0 +1,1617 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>快驴餐盒上架系统 · 原型</title>
+<link rel="stylesheet" href="https://unpkg.com/element-plus/dist/index.css" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #f5f7fa;
+    color: #1f2937;
+    height: 100vh;
+    overflow: hidden;
+  }
+  #app { height: 100vh; display: flex; flex-direction: column; }
+
+  /* ===== 顶栏 ===== */
+  .topbar {
+    height: 52px;
+    background: linear-gradient(90deg, #1f5dd0, #4080ff);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(31,93,208,.25);
+  }
+  .topbar .logo { font-size: 17px; font-weight: 600; letter-spacing: 1px; }
+  .topbar .sub { font-size: 12px; opacity: .75; margin-left: 10px; }
+  .topbar .right { margin-left: auto; font-size: 13px; opacity: .85; }
+
+  /* ===== 主布局 ===== */
+  .main { display: flex; flex: 1; min-height: 0; }
+  .sider {
+    width: 200px;
+    background: #fff;
+    border-right: 1px solid #ebeef5;
+    flex-shrink: 0;
+    padding: 16px 0;
+    overflow-y: auto;
+  }
+  .sider .nav-item {
+    padding: 12px 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    color: #606266;
+    transition: all .15s;
+    border-left: 3px solid transparent;
+  }
+  .sider .nav-item:hover { background: #f5f7fa; color: #1f5dd0; }
+  .sider .nav-item.active {
+    background: #ecf3ff;
+    color: #1f5dd0;
+    border-left-color: #1f5dd0;
+    font-weight: 500;
+  }
+  .sider .nav-item .badge {
+    margin-left: auto;
+    background: #f56c6c;
+    color: #fff;
+    border-radius: 10px;
+    padding: 1px 8px;
+    font-size: 11px;
+  }
+  .sider .section-title {
+    font-size: 11px;
+    color: #c0c4cc;
+    padding: 20px 20px 8px;
+    letter-spacing: 1px;
+  }
+  .content {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+  }
+
+  /* ===== 页面容器 ===== */
+  .page-card {
+    background: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.05);
+    margin-bottom: 16px;
+  }
+  .page-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .page-sub { font-size: 13px; color: #909399; margin-bottom: 16px; }
+
+  /* ===== 厂家端：手机模型 ===== */
+  .vendor-layout {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+  .phone-frame {
+    width: 320px;
+    height: 640px;
+    background: #1a1a1a;
+    border-radius: 36px;
+    padding: 10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.2);
+    position: relative;
+    flex-shrink: 0;
+  }
+  .phone-screen {
+    width: 100%;
+    height: 100%;
+    background: #fff;
+    border-radius: 28px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .phone-status {
+    height: 28px;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .phone-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 16px 100px;
+    font-size: 14px;
+  }
+  .phone-body::-webkit-scrollbar { width: 0; }
+  .phone-btn {
+    position: absolute;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1f5dd0;
+    color: #fff;
+    border: none;
+    padding: 10px 60px;
+    border-radius: 24px;
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .phone-btn:disabled { background: #c0c4cc; }
+  .mobile-field { margin-bottom: 16px; }
+  .mobile-field label {
+    display: block;
+    font-size: 12px;
+    color: #606266;
+    margin-bottom: 6px;
+  }
+  .mobile-field label .req { color: #f56c6c; margin-right: 2px; }
+  .mobile-field input,
+  .mobile-field select,
+  .mobile-field textarea {
+    width: 100%;
+    border: 1px solid #dcdfe6;
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 14px;
+    font-family: inherit;
+    background: #fafafa;
+  }
+  .mobile-field input:focus,
+  .mobile-field select:focus,
+  .mobile-field textarea:focus {
+    outline: none;
+    border-color: #1f5dd0;
+    background: #fff;
+  }
+  .photo-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .photo-cell {
+    aspect-ratio: 1;
+    border: 1px dashed #dcdfe6;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    background: #fafafa;
+    font-size: 20px;
+    color: #c0c4cc;
+    position: relative;
+    overflow: hidden;
+  }
+  .photo-cell img { width: 100%; height: 100%; object-fit: cover; }
+  .photo-cell .del {
+    position: absolute;
+    top: 2px; right: 2px;
+    width: 18px; height: 18px;
+    background: rgba(0,0,0,.5);
+    color: #fff;
+    border-radius: 50%;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+
+  /* 左侧：表单预览字段说明 */
+  .field-guide h3 { font-size: 15px; margin-bottom: 12px; }
+  .field-guide .field-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px 0;
+    border-bottom: 1px dashed #ebeef5;
+  }
+  .field-guide .field-row:last-child { border-bottom: none; }
+  .field-guide .field-name {
+    width: 120px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #303133;
+    flex-shrink: 0;
+  }
+  .field-guide .field-desc {
+    font-size: 12px;
+    color: #909399;
+    line-height: 1.6;
+  }
+  .field-guide .tag {
+    display: inline-block;
+    font-size: 11px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    margin-right: 4px;
+  }
+  .tag.req { background: #fef0f0; color: #f56c6c; }
+  .tag.opt { background: #f4f4f5; color: #909399; }
+  .tag.rule { background: #ecf3ff; color: #1f5dd0; }
+
+  /* ===== 审核工作台 ===== */
+  .review-layout { display: grid; grid-template-columns: 280px 1fr; gap: 16px; }
+  .review-queue {
+    background: #fff;
+    border-radius: 8px;
+    border: 1px solid #ebeef5;
+    max-height: calc(100vh - 260px);
+    overflow-y: auto;
+  }
+  .queue-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid #ebeef5;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .queue-item {
+    padding: 12px 16px;
+    border-bottom: 1px solid #f2f6fc;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .queue-item:hover { background: #f8fafc; }
+  .queue-item.active { background: #ecf3ff; border-left: 3px solid #1f5dd0; padding-left: 13px; }
+  .queue-item .name { font-size: 13px; font-weight: 500; color: #303133; margin-bottom: 4px; }
+  .queue-item .meta { font-size: 11px; color: #909399; }
+  .queue-item .imgs { font-size: 11px; color: #1f5dd0; margin-top: 4px; }
+
+  .review-area {
+    background: #fff;
+    border-radius: 8px;
+    border: 1px solid #ebeef5;
+    padding: 20px;
+    max-height: calc(100vh - 260px);
+    overflow-y: auto;
+  }
+  .review-area .empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 300px;
+    color: #c0c4cc;
+    font-size: 14px;
+  }
+  .section-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1f5dd0;
+    margin: 20px 0 12px;
+    padding-left: 10px;
+    border-left: 3px solid #1f5dd0;
+  }
+  .section-title.first { margin-top: 0; }
+  .rule-warn {
+    background: #fdf6ec;
+    border: 1px solid #faecd8;
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 12px;
+    color: #e6a23c;
+    margin-bottom: 12px;
+  }
+  .rule-warn .item { margin-bottom: 4px; }
+  .rule-warn .item:last-child { margin-bottom: 0; }
+  .imgs-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .img-card {
+    width: 100px;
+    height: 100px;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid #ebeef5;
+    position: relative;
+  }
+  .img-card img { width: 100%; height: 100%; object-fit: cover; }
+  .img-card .order-badge {
+    position: absolute; top: 2px; left: 2px;
+    background: rgba(0,0,0,.6); color: #fff;
+    font-size: 10px; padding: 1px 6px; border-radius: 3px;
+  }
+  .img-card .type-badge {
+    position: absolute; bottom: 2px; right: 2px;
+    background: #1f5dd0; color: #fff;
+    font-size: 10px; padding: 1px 6px; border-radius: 3px;
+  }
+
+  /* ===== 上架作业单 ===== */
+  .job-layout { display: grid; grid-template-columns: 1fr 340px; gap: 16px; }
+  .job-step {
+    border: 1px solid #ebeef5;
+    border-radius: 6px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    background: #fff;
+  }
+  .job-step .step-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .job-step .step-num {
+    width: 24px; height: 24px;
+    background: #1f5dd0; color: #fff;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .job-step .step-title { font-size: 14px; font-weight: 500; }
+  .job-step .step-field {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 6px 0;
+  }
+  .job-step .step-field .f-name {
+    width: 90px; font-size: 12px; color: #909399; flex-shrink: 0;
+  }
+  .job-step .step-field .f-val {
+    flex: 1;
+    font-size: 13px;
+    background: #f5f7fa;
+    padding: 6px 10px;
+    border-radius: 4px;
+    border: 1px solid transparent;
+  }
+  .job-step .step-field .f-val:hover { border-color: #1f5dd0; }
+  .copy-btn {
+    font-size: 11px;
+    padding: 3px 8px;
+    background: #1f5dd0;
+    color: #fff;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  .copy-btn:hover { background: #1447b0; }
+
+  .job-actions {
+    background: #fff;
+    border-radius: 8px;
+    border: 1px solid #ebeef5;
+    padding: 16px;
+    height: fit-content;
+    position: sticky;
+    top: 20px;
+  }
+  .job-actions h3 { font-size: 14px; margin-bottom: 12px; }
+
+  /* ===== 历史 ===== */
+  .history-toolbar {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+
+  /* ===== 状态标签 ===== */
+  .status {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+  }
+  .status.draft { background: #f4f4f5; color: #909399; }
+  .status.pending { background: #fdf6ec; color: #e6a23c; }
+  .status.rejected { background: #fef0f0; color: #f56c6c; }
+  .status.ready { background: #ecf3ff; color: #1f5dd0; }
+  .status.listed { background: #f0f9eb; color: #67c23a; }
+  .status.offline { background: #f4f4f5; color: #909399; }
+
+  /* ===== 通用 ===== */
+  .flex { display: flex; }
+  .gap-8 { gap: 8px; }
+  .gap-12 { gap: 12px; }
+  .gap-16 { gap: 16px; }
+  .mt-8 { margin-top: 8px; }
+  .mt-12 { margin-top: 12px; }
+  .mt-16 { margin-top: 16px; }
+  .mb-8 { margin-bottom: 8px; }
+  .mb-12 { margin-bottom: 12px; }
+  .text-muted { color: #909399; }
+  .text-small { font-size: 12px; }
+
+  /* el-table 行内按钮 */
+  .inline-btn {
+    background: none;
+    border: none;
+    color: #1f5dd0;
+    cursor: pointer;
+    font-size: 13px;
+    margin-right: 8px;
+  }
+  .inline-btn.danger { color: #f56c6c; }
+  .inline-btn:hover { text-decoration: underline; }
+
+  /* 详情预览 */
+  .detail-preview {
+    background: #fafafa;
+    border: 1px solid #ebeef5;
+    border-radius: 6px;
+    padding: 16px;
+  }
+  .detail-preview .dp-title { font-size: 16px; font-weight: 600; margin-bottom: 12px; }
+  .detail-preview img { max-width: 100%; margin-bottom: 12px; border-radius: 4px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- 顶栏 -->
+  <div class="topbar">
+    <span class="logo">🍱 快驴餐盒上架系统</span>
+    <span class="sub">原型 v0.1 · 字段确认用</span>
+    <span class="right">演示数据 · localStorage 持久化</span>
+  </div>
+
+  <div class="main">
+    <!-- 侧边导航 -->
+    <div class="sider">
+      <div class="section-title">工作台</div>
+      <div class="nav-item" :class="{active: tab === 'vendor'}" @click="tab = 'vendor'">
+        📱 厂家录入端
+      </div>
+      <div class="nav-item" :class="{active: tab === 'review'}" @click="tab = 'review'">
+        ✅ 审核工作台
+        <span class="badge" v-if="pendingCount">{{ pendingCount }}</span>
+      </div>
+      <div class="nav-item" :class="{active: tab === 'job'}" @click="tab = 'job'">
+        📋 上架作业单
+      </div>
+      <div class="nav-item" :class="{active: tab === 'history'}" @click="tab = 'history'">
+        📊 历史查询
+      </div>
+
+      <div class="section-title">工具</div>
+      <div class="nav-item" @click="resetData">🗑 重置演示数据</div>
+    </div>
+
+    <!-- 主内容 -->
+    <div class="content">
+
+      <!-- ========== 厂家录入端 ========== -->
+      <div v-if="tab === 'vendor'">
+        <div class="page-card">
+          <div class="page-title">厂家微信录入端</div>
+          <div class="page-sub">厂家拿到邀请码后，在手机上打开 H5 填写基础信息，拍摄产品照片，提交后进入审核队列。右侧是字段说明，方便你们快速确认。</div>
+        </div>
+
+        <div class="vendor-layout">
+          <!-- 手机模拟 -->
+          <div class="phone-frame">
+            <div class="phone-screen">
+              <div class="phone-status">
+                <span>9:41</span>
+                <span>●●●●●●</span>
+              </div>
+              <div class="phone-body">
+                <!-- 未登录 -->
+                <template v-if="!vendorLoggedIn">
+                  <div style="text-align:center;margin-top:40px;">
+                    <div style="font-size:40px;">📦</div>
+                    <div style="font-weight:600;margin:12px 0 4px;">快驴餐盒入驻</div>
+                    <div style="font-size:12px;color:#909399;margin-bottom:24px;">请输入运营方提供的邀请码</div>
+                    <div class="mobile-field">
+                      <label><span class="req">*</span>邀请码</label>
+                      <input v-model="vendorInvite" placeholder="例如：KL-2026" />
+                    </div>
+                    <div style="margin-top:16px;">
+                      <button class="phone-btn" style="position:static;width:100%;" @click="vendorLogin">进入</button>
+                    </div>
+                  </div>
+                </template>
+
+                <!-- 已登录：录入表单 -->
+                <template v-else>
+                  <div style="background:#ecf3ff;padding:10px 12px;border-radius:8px;margin-bottom:16px;font-size:12px;color:#1f5dd0;">
+                    👋 欢迎，<b>{{ currentSupplier.name }}</b><br/>
+                    联系人：{{ currentSupplier.contact }} · {{ currentSupplier.phone }}
+                  </div>
+
+                  <div class="mobile-field">
+                    <label><span class="req">*</span>SPU 商品名称</label>
+                    <input v-model="vendorForm.spuName" placeholder="如：一次性方形餐盒 PP 本色" />
+                  </div>
+
+                  <div class="mobile-field">
+                    <label><span class="req">*</span>品牌</label>
+                    <select v-model="vendorForm.brand">
+                      <option value="">请选择</option>
+                      <option v-for="b in brandOptions" :key="b" :value="b">{{ b }}</option>
+                      <option value="无">无品牌</option>
+                    </select>
+                  </div>
+
+                  <div class="mobile-field">
+                    <label><span class="req">*</span>材质</label>
+                    <select v-model="vendorForm.material">
+                      <option value="">请选择</option>
+                      <option>PP（聚丙烯）</option>
+                      <option>PS（聚苯乙烯）</option>
+                      <option>PET（聚对苯二甲酸乙二醇酯）</option>
+                      <option>PLA（可降解玉米淀粉）</option>
+                      <option>甘蔗浆/纸浆</option>
+                      <option>铝箔</option>
+                      <option>其他</option>
+                    </select>
+                  </div>
+
+                  <div class="mobile-field">
+                    <label><span class="req">*</span>尺寸</label>
+                    <input v-model="vendorForm.size" placeholder="如：175×125×45 mm" />
+                  </div>
+
+                  <div class="mobile-field">
+                    <label><span class="req">*</span>单格数量</label>
+                    <select v-model="vendorForm.compartments">
+                      <option value="">请选择</option>
+                      <option>1格（单格）</option>
+                      <option>2格</option>
+                      <option>3格</option>
+                      <option>4格</option>
+                      <option>多格（5格及以上）</option>
+                    </select>
+                  </div>
+
+                  <div class="mobile-field">
+                    <label>容量（ml/格）</label>
+                    <input v-model="vendorForm.capacity" placeholder="如：500" />
+                  </div>
+
+                  <div class="mobile-field">
+                    <label><span class="req">*</span>每箱数量</label>
+                    <input v-model="vendorForm.boxQty" placeholder="如：500 个/箱" />
+                  </div>
+
+                  <div class="mobile-field">
+                    <label><span class="req">*</span>供货单价（元/个）</label>
+                    <input v-model="vendorForm.price" placeholder="如：0.85" />
+                  </div>
+
+                  <div class="mobile-field">
+                    <label>起订量</label>
+                    <input v-model="vendorForm.moq" placeholder="如：1 箱" />
+                  </div>
+
+                  <div class="mobile-field">
+                    <label>条形码（EAN-13）</label>
+                    <input v-model="vendorForm.barcode" placeholder="有则填，无则填 000" maxlength="13" />
+                  </div>
+
+                  <div class="mobile-field">
+                    <label><span class="req">*</span>包装标签照片（含厂名/地址/材质标识）</label>
+                    <div class="photo-grid">
+                      <div v-for="(img, i) in vendorForm.pkgLabels" :key="'pl'+i" class="photo-cell" @click="triggerUpload('pkgLabels')">
+                        <img v-if="img" :src="img" />
+                        <span v-else>+</span>
+                        <span v-if="img" class="del" @click.stop="vendorForm.pkgLabels.splice(i,1)">×</span>
+                      </div>
+                      <div v-if="vendorForm.pkgLabels.length < 3" class="photo-cell" @click="triggerUpload('pkgLabels')">+</div>
+                    </div>
+                  </div>
+
+                  <div class="mobile-field">
+                    <label><span class="req">*</span>产品实拍图</label>
+                    <div class="photo-grid">
+                      <div v-for="(img, i) in vendorForm.realPhotos" :key="'rp'+i" class="photo-cell" @click="triggerUpload('realPhotos')">
+                        <img v-if="img" :src="img" />
+                        <span v-else>+</span>
+                        <span v-if="img" class="del" @click.stop="vendorForm.realPhotos.splice(i,1)">×</span>
+                      </div>
+                      <div v-if="vendorForm.realPhotos.length < 6" class="photo-cell" @click="triggerUpload('realPhotos')">+</div>
+                    </div>
+                  </div>
+
+                  <div class="mobile-field">
+                    <label>食品接触材料检测报告</label>
+                    <div class="photo-grid">
+                      <div v-for="(img, i) in vendorForm.reports" :key="'r'+i" class="photo-cell" @click="triggerUpload('reports')">
+                        <img v-if="img" :src="img" />
+                        <span v-else>+</span>
+                        <span v-if="img" class="del" @click.stop="vendorForm.reports.splice(i,1)">×</span>
+                      </div>
+                      <div v-if="vendorForm.reports.length < 2" class="photo-cell" @click="triggerUpload('reports')">+</div>
+                    </div>
+                  </div>
+
+                  <input type="file" ref="fileInput" accept="image/*" style="display:none" @change="handleFile" />
+
+                  <div class="mobile-field">
+                    <label>备注/供货说明</label>
+                    <textarea v-model="vendorForm.remark" rows="3" placeholder="如：可根据客户要求定制颜色/印刷 LOGO、交期 7 天等"></textarea>
+                  </div>
+
+                  <button class="phone-btn" :disabled="!canSubmit" @click="submitVendor">提交审核</button>
+                </template>
+              </div>
+            </div>
+          </div>
+
+          <!-- 右侧字段说明 -->
+          <div class="page-card field-guide">
+            <h3>📋 字段确认清单</h3>
+            <p class="text-muted text-small mb-12">对照快驴发布规范 + 餐盒类目特性整理，帮助你们快速判断哪些是厂家该填的、哪些是员工审核时补的。</p>
+
+            <div class="field-row">
+              <div class="field-name">SPU 商品名称</div>
+              <div class="field-desc">
+                <span class="tag req">必填</span>
+                必须包含可定位产品的信息，不能含品牌字样。
+                例：一次性方形餐盒 PP 本色 175×125×45。
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field-name">品牌</div>
+              <div class="field-desc">
+                <span class="tag req">必填</span>
+                <span class="tag rule">餐厨用品类目</span>
+                餐厨用品类目不允许"无品牌"，厂家必须提供。没有自有品牌需提前沟通。
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field-name">材质</div>
+              <div class="field-desc">
+                <span class="tag req">必填</span>
+                影响运输方式和贮存方式（塑料→常温；铝箔→常温）。
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field-name">尺寸 / 单格 / 容量</div>
+              <div class="field-desc">
+                <span class="tag req">必填</span>
+                组合决定 SKU 名称，员工审核时还要生成快驴侧 SKU 名称。
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field-name">每箱数量</div>
+              <div class="field-desc">
+                <span class="tag req">必填</span>
+                即"箱规"，决定外包装计量单位，员工审核时还要填毛重/净重。
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field-name">供货单价</div>
+              <div class="field-desc">
+                <span class="tag req">必填</span>
+                供采购方参考，最终上架价由平台定价策略决定。
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field-name">条形码</div>
+              <div class="field-desc">
+                <span class="tag opt">选填</span>
+                调料干货类目必填；餐厨用品没有时填"000"，但要上传包装条形码区域照片。
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field-name">包装标签照片</div>
+              <div class="field-desc">
+                <span class="tag req">必填</span>
+                至少 1 张，含厂名、地址、材质标识、执行标准。快驴审核用。
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field-name">产品实拍图</div>
+              <div class="field-desc">
+                <span class="tag req">必填</span>
+                厂家提供基础素材，员工后台还要补充白底主图、多角度图。
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field-name">检测报告</div>
+              <div class="field-desc">
+                <span class="tag opt">选填</span>
+                食品接触材料检测报告（GB 4806.7），有则上传，快驴抽检时用。
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field-name">【员工补】类目选择</div>
+              <div class="field-desc">
+                <span class="tag rule">人工补</span>
+                厂家不了解快驴类目体系，员工审核时选到最末级（通常是"餐厨用品→一次性餐具→餐盒"）。
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field-name">【员工补】毛重/保质期/运输</div>
+              <div class="field-desc">
+                <span class="tag rule">人工补</span>
+                毛重 kg、保质期（餐盒→无保质期）、运输方式（塑料→常温）由员工选。
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field-name">【员工补】详情页</div>
+              <div class="field-desc">
+                <span class="tag rule">人工补</span>
+                产品卖点 + 场景图 + 规格说明，由员工用模板生成。
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field-name">【员工补】白底主图</div>
+              <div class="field-desc">
+                <span class="tag rule">人工补</span>
+                快驴要求主图白底/纯色底，厂家实拍图通常不是，需要处理或补拍。
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== 审核工作台 ========== -->
+      <div v-if="tab === 'review'">
+        <div class="page-card">
+          <div class="page-title">审核工作台</div>
+          <div class="page-sub">核对厂家提交的资料，补全类目/规格/详情页，校验规则后标记为"待上架"</div>
+        </div>
+
+        <div class="review-layout">
+          <!-- 待审队列 -->
+          <div class="review-queue">
+            <div class="queue-header">
+              🔔 待审队列
+              <span style="margin-left:auto;color:#909399;font-weight:normal;">{{ pendingList.length }} 条</span>
+            </div>
+            <div v-if="pendingList.length === 0" style="padding:40px;text-align:center;color:#c0c4cc;font-size:13px;">
+              暂无待审核商品
+            </div>
+            <div
+              v-for="item in pendingList"
+              :key="item.id"
+              class="queue-item"
+              :class="{active: currentReviewId === item.id}"
+              @click="selectReview(item)"
+            >
+              <div class="name">{{ item.spuName }}</div>
+              <div class="meta">{{ item.supplierName }} · {{ formatTime(item.createdAt) }}</div>
+              <div class="imgs">📷 实拍 {{ item.realPhotos.length }} / 包装 {{ item.pkgLabels.length }}</div>
+            </div>
+          </div>
+
+          <!-- 审核区域 -->
+          <div class="review-area" v-if="currentReview">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+              <span class="status pending">待审核</span>
+              <span style="font-size:13px;color:#909399;">提交方：{{ currentReview.supplierName }}</span>
+              <span style="font-size:13px;color:#909399;">· {{ formatTime(currentReview.createdAt) }}</span>
+              <div style="margin-left:auto;display:flex;gap:8px;">
+                <el-button size="small" @click="rejectReview">驳回</el-button>
+                <el-button size="small" type="primary" @click="approveReview">通过 → 生成上架作业单</el-button>
+              </div>
+            </div>
+
+            <!-- 规则校验 -->
+            <div v-if="reviewRules.length" class="rule-warn">
+              <template v-for="(r, i) in reviewRules" :key="i">
+                <div class="item" v-if="r.level === 'err'">⚠️ {{ r.msg }}</div>
+              </template>
+              <template v-for="(r, i) in reviewRules" :key="'w'+i">
+                <div class="item" v-if="r.level === 'warn'">💡 {{ r.msg }}</div>
+              </template>
+            </div>
+
+            <!-- 1. 基础信息（厂家提供） -->
+            <div class="section-title first">① 基础信息（厂家提供）</div>
+            <el-descriptions :column="2" border size="small">
+              <el-descriptions-item label="SPU 名称">{{ currentReview.spuName }}</el-descriptions-item>
+              <el-descriptions-item label="品牌">{{ currentReview.brand }}</el-descriptions-item>
+              <el-descriptions-item label="材质">{{ currentReview.material }}</el-descriptions-item>
+              <el-descriptions-item label="尺寸">{{ currentReview.size }}</el-descriptions-item>
+              <el-descriptions-item label="单格数量">{{ currentReview.compartments }}</el-descriptions-item>
+              <el-descriptions-item label="容量">{{ currentReview.capacity || '—' }} ml/格</el-descriptions-item>
+              <el-descriptions-item label="每箱数量">{{ currentReview.boxQty }}</el-descriptions-item>
+              <el-descriptions-item label="供货单价">¥{{ currentReview.price }}/个</el-descriptions-item>
+              <el-descriptions-item label="起订量">{{ currentReview.moq || '—' }}</el-descriptions-item>
+              <el-descriptions-item label="条形码">{{ currentReview.barcode || '—' }}</el-descriptions-item>
+            </el-descriptions>
+
+            <!-- 2. 类目选择 + 快驴必填属性（员工补） -->
+            <div class="section-title">② 快驴发布信息（员工补全）</div>
+            <el-form :inline="false" :model="reviewForm" label-width="140px" size="default">
+              <el-form-item label="末级类目 *" required>
+                <el-cascader
+                  v-model="reviewForm.category"
+                  :options="categoryOptions"
+                  :props="{expandTrigger: 'hover', checkStrictly: true}"
+                  placeholder="逐级选择，必须选到最末级"
+                  style="width:100%;max-width:480px;"
+                />
+              </el-form-item>
+              <el-form-item label="SKU 命名规则" required>
+                <div style="font-size:13px;color:#606266;line-height:1.8;">
+                  生鲜品类：SKU 名称 = SPU 名称<br/>
+                  <b style="color:#1f5dd0;">餐盒（标品类）：SKU 名称 = SPU + 最小规格/净含量 + 单位</b><br/>
+                  例：一次性方形餐盒 PP 本色 175×125×45 1000个/箱
+                </div>
+              </el-form-item>
+              <el-form-item label="毛重（kg）" required>
+                <el-input v-model="reviewForm.grossWeight" placeholder="如：18.5" style="max-width:200px;" />
+                <span style="margin-left:8px;color:#909399;font-size:12px;">整箱毛重</span>
+              </el-form-item>
+              <el-form-item label="保质期 *" required>
+                <el-radio-group v-model="reviewForm.shelfLife">
+                  <el-radio-button label="无保质期">无保质期</el-radio-button>
+                  <el-radio-button label="自定义">自定义</el-radio-button>
+                </el-radio-group>
+                <el-input v-if="reviewForm.shelfLife === '自定义'" v-model="reviewForm.shelfLifeCustom" placeholder="如：12 个月" style="width:160px;margin-left:8px;" />
+              </el-form-item>
+              <el-form-item label="运输方式 *" required>
+                <el-radio-group v-model="reviewForm.transport">
+                  <el-radio-button label="常温运输">常温运输</el-radio-button>
+                  <el-radio-button label="冷藏运输">冷藏运输</el-radio-button>
+                  <el-radio-button label="-18℃冷冻">-18℃冷冻</el-radio-button>
+                </el-radio-group>
+              </el-form-item>
+              <el-form-item label="贮存方式 *" required>
+                <el-radio-group v-model="reviewForm.storage">
+                  <el-radio-button label="常温">常温</el-radio-button>
+                  <el-radio-button label="冷藏储存">冷藏储存</el-radio-button>
+                  <el-radio-button label="冷冻储存">冷冻储存</el-radio-button>
+                </el-radio-group>
+              </el-form-item>
+              <el-form-item label="事业部别名">
+                <el-input v-model="reviewForm.buAlias" placeholder="不同地区俗称，如：外卖方盒、打包盒" style="max-width:360px;" />
+              </el-form-item>
+            </el-form>
+
+            <!-- 3. 图片管理 -->
+            <div class="section-title">③ 图片管理</div>
+            <div style="margin-bottom:12px;font-size:12px;color:#909399;">
+              快驴发布页需要：标签图（包装含条码面）+ 主图（白底）+ 多细节图 + 详情图。拖下面标记来源并排序。
+            </div>
+
+            <div style="margin-bottom:16px;">
+              <div style="font-size:12px;color:#606266;margin-bottom:6px;">🏷 包装标签图 {{ currentReview.pkgLabels.length }} 张</div>
+              <div class="imgs-row">
+                <div v-for="(img, i) in currentReview.pkgLabels" :key="'p'+i" class="img-card">
+                  <img :src="img" />
+                  <span class="order-badge">#{{ i+1 }}</span>
+                  <span class="type-badge">标签</span>
+                </div>
+                <div v-if="currentReview.pkgLabels.length === 0" style="font-size:12px;color:#f56c6c;">⚠ 厂家未提供，需补拍</div>
+              </div>
+            </div>
+
+            <div style="margin-bottom:16px;">
+              <div style="font-size:12px;color:#606266;margin-bottom:6px;">📷 产品实拍图 {{ currentReview.realPhotos.length }} 张</div>
+              <div class="imgs-row">
+                <div v-for="(img, i) in currentReview.realPhotos" :key="'r'+i" class="img-card">
+                  <img :src="img" />
+                  <span class="order-badge">#{{ i+1 }}</span>
+                  <span class="type-badge">实拍</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 4. 详情页 -->
+            <div class="section-title">④ 详情页模板</div>
+            <el-form label-width="120px" size="default">
+              <el-form-item label="卖点文案">
+                <el-input v-model="reviewForm.sellingPoints" type="textarea" :rows="2" placeholder="如：食品级 PP 材质 · 微波炉冰箱通用 · 防漏加厚 · 一箱 500 个" />
+              </el-form-item>
+              <el-form-item label="场景文案">
+                <el-input v-model="reviewForm.sceneText" type="textarea" :rows="2" placeholder="如：外卖打包、食堂配餐、烧烤露营、生鲜分装" />
+              </el-form-item>
+              <el-form-item label="规格说明">
+                <el-input v-model="reviewForm.specTable" type="textarea" :rows="3" placeholder="如：材质 PP｜温度范围 -20℃ ~ 120℃｜密封：带盖可微波｜颜色：本色/黑白" />
+              </el-form-item>
+            </el-form>
+
+            <div style="margin-top:16px;text-align:right;">
+              <el-button size="small" @click="rejectReview">驳回</el-button>
+              <el-button size="small" type="primary" @click="approveReview">
+                ✅ 通过，生成上架作业单
+              </el-button>
+            </div>
+          </div>
+
+          <div class="review-area" v-else>
+            <div class="empty">← 从左侧队列选一条开始审核</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== 上架作业单 ========== -->
+      <div v-if="tab === 'job'">
+        <div class="page-card">
+          <div class="page-title">上架作业单</div>
+          <div class="page-sub">字段按快驴 PC 后台发布页顺序排列 · 点击一键复制 · 图片打包下载 · 员工左右双屏对照操作</div>
+        </div>
+
+        <div v-if="readyList.length === 0" class="page-card" style="text-align:center;padding:60px;color:#909399;">
+          暂无待上架商品。去审核工作台完成审核后会自动生成作业单。
+        </div>
+
+        <div v-for="item in readyList" :key="item.id" class="page-card">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+            <span class="status ready">待上架</span>
+            <span style="font-weight:600;font-size:15px;">{{ item.spuName }}</span>
+            <span style="color:#909399;font-size:12px;">· 品牌 {{ item.brand }} · 材质 {{ item.material }}</span>
+            <div style="margin-left:auto;display:flex;gap:8px;">
+              <el-button size="small" @click="copyAll(item)">📋 复制全部文本</el-button>
+              <el-button size="small" @click="downloadImages(item)">📦 打包下载图片</el-button>
+              <el-button size="small" type="success" @click="markListed(item)">✅ 标记已上架</el-button>
+            </div>
+          </div>
+
+          <div class="job-layout">
+            <!-- 步骤序列 -->
+            <div>
+              <div class="job-step">
+                <div class="step-head"><span class="step-num">1</span><span class="step-title">类目</span><span class="text-muted text-small">选到最末级</span></div>
+                <div class="step-field">
+                  <span class="f-name">类目路径</span>
+                  <span class="f-val">{{ item.review.categoryPath || '（审核时补选）' }}</span>
+                  <button class="copy-btn" @click="copyText(item.review.categoryPath || '')">复制</button>
+                </div>
+              </div>
+
+              <div class="job-step">
+                <div class="step-head"><span class="step-num">2</span><span class="step-title">SPU 基础信息</span></div>
+                <div class="step-field"><span class="f-name">SPU 名称</span><span class="f-val">{{ item.spuName }}</span><button class="copy-btn" @click="copyText(item.spuName)">复制</button></div>
+                <div class="step-field"><span class="f-name">品牌</span><span class="f-val">{{ item.brand }}</span><button class="copy-btn" @click="copyText(item.brand)">复制</button></div>
+                <div class="step-field"><span class="f-name">事业部别名</span><span class="f-val">{{ item.review.buAlias || '（空）' }}</span><button class="copy-btn" @click="copyText(item.review.buAlias || '')">复制</button></div>
+              </div>
+
+              <div class="job-step">
+                <div class="step-head"><span class="step-num">3</span><span class="step-title">SKU 规格信息</span></div>
+                <div class="step-field"><span class="f-name">SKU 名称</span><span class="f-val">{{ item.listingSkuName }}</span><button class="copy-btn" @click="copyText(item.listingSkuName)">复制</button></div>
+                <div class="step-field"><span class="f-name">SKU 标题</span><span class="f-val">{{ item.listingSkuTitle }}</span><button class="copy-btn" @click="copyText(item.listingSkuTitle)">复制</button></div>
+                <div class="step-field"><span class="f-name">规格/内包装</span><span class="f-val">{{ item.size }} · {{ item.compartments }}</span></div>
+                <div class="step-field"><span class="f-name">箱规/外包装</span><span class="f-val">{{ item.boxQty }}</span></div>
+                <div class="step-field"><span class="f-name">毛重</span><span class="f-val">{{ item.review.grossWeight || '（审核时补）' }} kg</span></div>
+              </div>
+
+              <div class="job-step">
+                <div class="step-head"><span class="step-num">4</span><span class="step-title">保质期与运输</span></div>
+                <div class="step-field"><span class="f-name">保质期</span><span class="f-val">{{ item.review.shelfLife || '无保质期' }}{{ item.review.shelfLife === '自定义' ? '（'+(item.review.shelfLifeCustom||'')+'）' : '' }}</span></div>
+                <div class="step-field"><span class="f-name">运输方式</span><span class="f-val">{{ item.review.transport || '常温运输' }}</span></div>
+                <div class="step-field"><span class="f-name">贮存方式</span><span class="f-val">{{ item.review.storage || '常温' }}</span></div>
+              </div>
+
+              <div class="job-step">
+                <div class="step-head"><span class="step-num">5</span><span class="step-title">标签/条码</span></div>
+                <div class="step-field"><span class="f-name">条码类型</span><span class="f-val">{{ item.barcode ? '国际条形码' : '无（填 000）' }}</span></div>
+                <div class="step-field"><span class="f-name">条形码号</span><span class="f-val">{{ item.barcode || '000' }}</span><button class="copy-btn" @click="copyText(item.barcode || '000')">复制</button></div>
+              </div>
+
+              <div class="job-step">
+                <div class="step-head"><span class="step-num">6</span><span class="step-title">图片与详情</span></div>
+                <div class="step-field"><span class="f-name">标签图</span><span class="f-val">第 1 张包装标签照片（{{ item.pkgLabels.length }} 张）</span></div>
+                <div class="step-field"><span class="f-name">主图</span><span class="f-val">白底或纯色底 · {{ item.realPhotos.length }} 张实拍需补白底</span></div>
+                <div class="step-field"><span class="f-name">详情描述</span><span class="f-val" style="max-height:80px;overflow-y:auto;">{{ item.review.specTable }}<br/>{{ item.review.sellingPoints }}<br/>{{ item.review.sceneText }}</span></div>
+              </div>
+            </div>
+
+            <!-- 右侧：图片预览 -->
+            <div class="job-actions" style="position:sticky;top:20px;max-height:calc(100vh - 160px);overflow-y:auto;">
+              <h3>📸 图片预览</h3>
+
+              <div style="font-size:12px;color:#606266;margin:12px 0 6px;">标签图（{{ item.pkgLabels.length }} 张）</div>
+              <div class="imgs-row">
+                <div v-for="(img, i) in item.pkgLabels" :key="'lp'+i" class="img-card"><img :src="img" /></div>
+              </div>
+
+              <div style="font-size:12px;color:#606266;margin:16px 0 6px;">实拍图（{{ item.realPhotos.length }} 张）</div>
+              <div class="imgs-row">
+                <div v-for="(img, i) in item.realPhotos" :key="'lr'+i" class="img-card"><img :src="img" /></div>
+              </div>
+
+              <div style="margin-top:16px;padding:10px;background:#ecf3ff;border-radius:6px;font-size:12px;color:#1f5dd0;line-height:1.6;">
+                💡 操作建议：<br/>
+                ① 点击"复制"可复制单个字段<br/>
+                ② 点击"📋 复制全部文本"一键复制所有字段，粘贴到记事本对照<br/>
+                ③ 左右双屏（左边作业单，右边快驴后台）效率最高<br/>
+                ④ 图片先用厂家实拍图占位，有白底图再替换
+              </div>
+
+              <el-input v-model="item.platformId" placeholder="快驴商品 ID（发布后回填）" size="small" style="margin-top:12px;" />
+              <el-input v-model="item.platformUrl" placeholder="快驴商品链接（发布后回填）" size="small" style="margin-top:8px;" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== 历史查询 ========== -->
+      <div v-if="tab === 'history'">
+        <div class="page-card">
+          <div class="page-title">历史查询</div>
+          <div class="page-sub">草稿/待审/已上架/已下架 全状态流水 · 操作日志可追溯</div>
+        </div>
+
+        <div class="page-card">
+          <div class="history-toolbar">
+            <el-input v-model="historyFilter.keyword" placeholder="搜 SPU 名称 / 厂家 / 品牌" clearable style="width:240px;" size="small" />
+            <el-select v-model="historyFilter.status" placeholder="全部状态" clearable style="width:140px;" size="small">
+              <el-option label="草稿" value="draft" />
+              <el-option label="待审核" value="pending" />
+              <el-option label="已驳回" value="rejected" />
+              <el-option label="待上架" value="ready" />
+              <el-option label="已上架" value="listed" />
+              <el-option label="已下架" value="offline" />
+            </el-select>
+            <el-date-picker v-model="historyFilter.dateRange" type="daterange" range-separator="至" start-placeholder="开始" end-placeholder="结束" size="small" />
+            <div style="margin-left:auto;color:#909399;font-size:13px;">共 {{ filteredHistory.length }} 条</div>
+          </div>
+
+          <el-table :data="filteredHistory" border size="default" stripe>
+            <el-table-column prop="spuName" label="SPU 名称" min-width="220">
+              <template #default="{row}">
+                <div style="font-weight:500;">{{ row.spuName }}</div>
+                <div style="font-size:12px;color:#909399;">{{ row.brand }} · {{ row.material }} · {{ row.size }}</div>
+              </template>
+            </el-table-column>
+            <el-table-column prop="supplierName" label="厂家" width="140" />
+            <el-table-column prop="createdAt" label="提交时间" width="160">
+              <template #default="{row}">{{ formatTime(row.createdAt) }}</template>
+            </el-table-column>
+            <el-table-column prop="status" label="状态" width="100">
+              <template #default="{row}">
+                <span :class="'status ' + row.status">{{ statusLabel(row.status) }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column label="快驴商品" min-width="180">
+              <template #default="{row}">
+                <span v-if="row.platformId" style="color:#606266;font-size:12px;">ID: {{ row.platformId }}</span>
+                <a v-if="row.platformUrl" :href="row.platformUrl" target="_blank" style="color:#1f5dd0;font-size:12px;display:block;">查看 →</a>
+                <span v-else-if="row.status === 'listed'" style="color:#909399;font-size:12px;">已发布但未回填 ID</span>
+                <span v-else style="color:#c0c4cc;font-size:12px;">—</span>
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" width="220" fixed="right">
+              <template #default="{row}">
+                <button class="inline-btn" @click="viewDetail(row)">查看</button>
+                <button class="inline-btn" v-if="row.status === 'ready'" @click="markListed(row)">标记上架</button>
+                <button class="inline-btn" v-if="row.status === 'listed'" @click="offlineItem(row)">下架</button>
+                <button class="inline-btn" v-if="row.status === 'offline'" @click="relistItem(row)">重新上架</button>
+                <button class="inline-btn danger" v-if="row.status !== 'listed' && row.status !== 'pending'" @click="deleteItem(row)">删除</button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 详情抽屉 -->
+  <el-drawer v-model="detailVisible" title="商品详情" size="640px">
+    <template v-if="detailItem">
+      <div class="detail-preview">
+        <div class="dp-title">{{ detailItem.spuName }}</div>
+        <el-descriptions :column="2" border size="small">
+          <el-descriptions-item label="品牌">{{ detailItem.brand }}</el-descriptions-item>
+          <el-descriptions-item label="材质">{{ detailItem.material }}</el-descriptions-item>
+          <el-descriptions-item label="尺寸">{{ detailItem.size }}</el-descriptions-item>
+          <el-descriptions-item label="单格数量">{{ detailItem.compartments }}</el-descriptions-item>
+          <el-descriptions-item label="容量">{{ detailItem.capacity || '—' }} ml</el-descriptions-item>
+          <el-descriptions-item label="每箱数量">{{ detailItem.boxQty }}</el-descriptions-item>
+          <el-descriptions-item label="供货单价">¥{{ detailItem.price }}/个</el-descriptions-item>
+          <el-descriptions-item label="条形码">{{ detailItem.barcode || '—' }}</el-descriptions-item>
+          <el-descriptions-item label="快驴类目" :span="2">{{ detailItem.review?.categoryPath || '（未补）' }}</el-descriptions-item>
+          <el-descriptions-item label="快驴 SKU 名称" :span="2">{{ detailItem.listingSkuName || '—' }}</el-descriptions-item>
+          <el-descriptions-item label="快驴 SKU 标题" :span="2">{{ detailItem.listingSkuTitle || '—' }}</el-descriptions-item>
+          <el-descriptions-item label="保质期">{{ detailItem.review?.shelfLife || '—' }}</el-descriptions-item>
+          <el-descriptions-item label="运输方式">{{ detailItem.review?.transport || '—' }}</el-descriptions-item>
+        </el-descriptions>
+      </div>
+
+      <div style="margin-top:16px;">
+        <h4 style="font-size:14px;margin-bottom:10px;">📦 包装标签照片</h4>
+        <div class="imgs-row">
+          <div v-for="(img, i) in detailItem.pkgLabels" :key="'dp'+i" class="img-card"><img :src="img" /></div>
+          <span v-if="!detailItem.pkgLabels?.length" class="text-muted text-small">—</span>
+        </div>
+      </div>
+      <div style="margin-top:16px;">
+        <h4 style="font-size:14px;margin-bottom:10px;">📷 产品实拍图</h4>
+        <div class="imgs-row">
+          <div v-for="(img, i) in detailItem.realPhotos" :key="'dr'+i" class="img-card"><img :src="img" /></div>
+          <span v-if="!detailItem.realPhotos?.length" class="text-muted text-small">—</span>
+        </div>
+      </div>
+      <div style="margin-top:16px;">
+        <h4 style="font-size:14px;margin-bottom:10px;">📝 详情页文案</h4>
+        <div style="background:#fafafa;border-radius:6px;padding:12px;font-size:13px;line-height:1.8;color:#606266;">
+          {{ detailItem.review?.sellingPoints || '（未填）' }}<br/>
+          {{ detailItem.review?.sceneText || '' }}<br/>
+          {{ detailItem.review?.specTable || '' }}
+        </div>
+      </div>
+    </template>
+  </el-drawer>
+</div>
+
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script src="https://unpkg.com/element-plus"></script>
+<script src="https://unpkg.com/@element-plus/icons-vue"></script>
+<script>
+const { createApp, ref, reactive, computed, watch, onMounted, nextTick } = Vue;
+
+/* =============== Mock 数据 =============== */
+const LS_KEY = 'kuailv_listing_v1';
+const now = () => new Date().toISOString();
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+
+// 假图片占位 - 用纯 SVG 二维码风格的 base64
+const ph = (text, color = '#ecf3ff') => {
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><rect width='200' height='200' fill='${color}'/><text x='50%' y='50%' font-size='14' text-anchor='middle' dominant-baseline='middle' font-family='Arial' fill='#1f5dd0'>${text}</text></svg>`;
+  return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
+};
+
+const CATEGORY_TREE = [
+  {
+    value: '餐厨用品', label: '餐厨用品', children: [
+      {
+        value: '一次性餐具', label: '一次性餐具', children: [
+          { value: '餐盒', label: '餐盒' },
+          { value: '碗盘', label: '碗盘' },
+          { value: '杯子', label: '杯子' },
+          { value: '筷子', label: '筷子' },
+          { value: '勺子', label: '勺子' },
+        ]
+      },
+      { value: '厨房收纳', label: '厨房收纳' },
+      { value: '清洁用品', label: '清洁用品' },
+    ]
+  },
+  {
+    value: '包装材料', label: '包装材料', children: [
+      { value: '塑料袋', label: '塑料袋' },
+      { value: '保鲜膜', label: '保鲜膜' },
+    ]
+  }
+];
+
+const BRANDS = ['金五缘', '康利达', '三象', '乐亿', '美家', '福瑞斯', '绿之彩', '德乐', '安馨'];
+
+const MOCK_DATA = {
+  suppliers: [
+    { id: 's1', invite: 'KL-2026', name: '金五缘塑料制品有限公司', contact: '张经理', phone: '138****8888' },
+    { id: 's2', invite: 'KL-8899', name: '康利达新材料科技', contact: '李总', phone: '139****6666' },
+  ],
+  items: [
+    {
+      id: uid(),
+      status: 'pending',
+      supplierId: 's1',
+      supplierName: '金五缘塑料制品有限公司',
+      spuName: '一次性方形餐盒 PP 本色 175×125×45',
+      brand: '金五缘',
+      material: 'PP（聚丙烯）',
+      size: '175×125×45 mm',
+      compartments: '2格',
+      capacity: '500',
+      boxQty: '500 个/箱',
+      price: '0.85',
+      moq: '1 箱',
+      barcode: '6901234567890',
+      pkgLabels: [ph('包装标签', '#fef0f0')],
+      realPhotos: [ph('实拍-正面'), ph('实拍-侧面'), ph('实拍-带盖')],
+      reports: [],
+      remark: '可印 LOGO，交期 7 天',
+      createdAt: Date.now() - 3600000 * 2,
+      updatedAt: Date.now() - 3600000 * 2,
+      review: null,
+      listingSkuName: '',
+      listingSkuTitle: '',
+      platformId: '',
+      platformUrl: '',
+      rejectReason: '',
+    },
+    {
+      id: uid(),
+      status: 'pending',
+      supplierId: 's2',
+      supplierName: '康利达新材料科技',
+      spuName: '一次性圆形打包盒 PP 黑色 1000ml',
+      brand: '康利达',
+      material: 'PP（聚丙烯）',
+      size: 'φ140×70 mm',
+      compartments: '1格（单格）',
+      capacity: '1000',
+      boxQty: '400 个/箱',
+      price: '1.10',
+      moq: '2 箱',
+      barcode: '',
+      pkgLabels: [ph('包装标签', '#ecf3ff')],
+      realPhotos: [ph('实拍1'), ph('实拍2')],
+      reports: [],
+      remark: '',
+      createdAt: Date.now() - 3600000 * 8,
+      updatedAt: Date.now() - 3600000 * 8,
+      review: null,
+      listingSkuName: '',
+      listingSkuTitle: '',
+      platformId: '',
+      platformUrl: '',
+      rejectReason: '',
+    },
+    {
+      id: uid(),
+      status: 'ready',
+      supplierId: 's1',
+      supplierName: '金五缘塑料制品有限公司',
+      spuName: '一次性方形餐盒 PP 本色 200×140×50',
+      brand: '金五缘',
+      material: 'PP（聚丙烯）',
+      size: '200×140×50 mm',
+      compartments: '3格',
+      capacity: '750',
+      boxQty: '400 个/箱',
+      price: '1.05',
+      moq: '1 箱',
+      barcode: '6901234567906',
+      pkgLabels: [ph('包装标签', '#fdf6ec')],
+      realPhotos: [ph('实拍-主图'), ph('实拍-开盖'), ph('实拍-叠放')],
+      reports: [],
+      remark: '',
+      createdAt: Date.now() - 3600000 * 24,
+      updatedAt: Date.now() - 3600000 * 20,
+      review: {
+        category: ['餐厨用品', '一次性餐具', '餐盒'],
+        categoryPath: '餐厨用品 / 一次性餐具 / 餐盒',
+        grossWeight: '22.0',
+        shelfLife: '无保质期',
+        shelfLifeCustom: '',
+        transport: '常温运输',
+        storage: '常温',
+        buAlias: '外卖方盒、三格便当盒',
+        sellingPoints: '食品级 PP 材质 耐高温 防漏加厚 一箱 400 个',
+        sceneText: '外卖打包 食堂配餐 商务便当 生鲜分装',
+        specTable: '材质：PP｜温度：-20℃~120℃｜密封：带盖微透｜颜色：本色',
+      },
+      listingSkuName: '一次性方形餐盒 PP 本色 200×140×50 3格 750ml 400个/箱',
+      listingSkuTitle: '一次性方形餐盒 PP 本色 200×140×50 3格 金五缘',
+      platformId: '',
+      platformUrl: '',
+      rejectReason: '',
+    },
+    {
+      id: uid(),
+      status: 'listed',
+      supplierId: 's1',
+      supplierName: '金五缘塑料制品有限公司',
+      spuName: '一次性方形餐盒 PP 本色 175×125×45',
+      brand: '金五缘',
+      material: 'PP（聚丙烯）',
+      size: '175×125×45 mm',
+      compartments: '2格',
+      capacity: '500',
+      boxQty: '500 个/箱',
+      price: '0.85',
+      moq: '1 箱',
+      barcode: '6901234567890',
+      pkgLabels: [ph('包装标签')],
+      realPhotos: [ph('实拍1'), ph('实拍2'), ph('实拍3')],
+      reports: [],
+      remark: '',
+      createdAt: Date.now() - 3600000 * 72,
+      updatedAt: Date.now() - 3600000 * 48,
+      review: {
+        category: ['餐厨用品', '一次性餐具', '餐盒'],
+        categoryPath: '餐厨用品 / 一次性餐具 / 餐盒',
+        grossWeight: '18.5',
+        shelfLife: '无保质期',
+        transport: '常温运输',
+        storage: '常温',
+        buAlias: '双格餐盒',
+        sellingPoints: '食品级 PP 微波炉可用',
+        sceneText: '外卖 食堂',
+        specTable: 'PP｜-20~120℃',
+      },
+      listingSkuName: '一次性方形餐盒 PP 本色 175×125×45 2格 500ml 500个/箱',
+      listingSkuTitle: '一次性方形餐盒 PP 本色 175×125×45 金五缘',
+      platformId: 'KL-SPU-8823147',
+      platformUrl: 'https://seller.kuailv.meituan.com/product/8823147',
+      rejectReason: '',
+    },
+  ],
+};
+
+/* =============== Vue App =============== */
+const app = createApp({
+  setup() {
+    const tab = ref('vendor');
+    const data = reactive(loadData());
+    const vendorLoggedIn = ref(false);
+    const vendorInvite = ref('');
+    const vendorSupplierId = ref(null);
+    const fileInput = ref(null);
+    const uploadTarget = ref('');
+    const currentReviewId = ref(null);
+    const reviewForm = reactive(makeEmptyReviewForm());
+    const reviewRules = ref([]);
+    const currentReview = computed(() => data.items.find(i => i.id === currentReviewId.value));
+    const detailVisible = ref(false);
+    const detailItem = ref(null);
+    const historyFilter = reactive({ keyword: '', status: '', dateRange: [] });
+
+    function loadData() {
+      try {
+        const raw = localStorage.getItem(LS_KEY);
+        if (raw) return JSON.parse(raw);
+      } catch (e) {}
+      return JSON.parse(JSON.stringify(MOCK_DATA));
+    }
+    function saveData() {
+      localStorage.setItem(LS_KEY, JSON.stringify(data));
+    }
+    function resetData() {
+      ElementPlus.ElMessageBox.confirm('确认重置所有数据为演示初始状态？', '提示', { type: 'warning' }).then(() => {
+        Object.assign(data, JSON.parse(JSON.stringify(MOCK_DATA)));
+        saveData();
+        ElementPlus.ElMessage.success('已重置');
+      }).catch(() => {});
+    }
+
+    /* 厂家端 */
+    const vendorForm = reactive({
+      spuName: '', brand: '', material: '', size: '', compartments: '',
+      capacity: '', boxQty: '', price: '', moq: '', barcode: '',
+      pkgLabels: [], realPhotos: [], reports: [], remark: '',
+    });
+    const brandOptions = computed(() => {
+      const s = data.suppliers.find(x => x.id === vendorSupplierId.value);
+      return s ? [s.name.split('有限公司')[0].split('科技')[0].trim(), '无'].filter(Boolean) : BRANDS;
+    });
+    const currentSupplier = computed(() => data.suppliers.find(x => x.id === vendorSupplierId.value));
+    const canSubmit = computed(() =>
+      vendorForm.spuName && vendorForm.brand && vendorForm.material && vendorForm.size &&
+      vendorForm.compartments && vendorForm.boxQty && vendorForm.price &&
+      vendorForm.pkgLabels.length >= 1 && vendorForm.realPhotos.length >= 1
+    );
+
+    function vendorLogin() {
+      const s = data.suppliers.find(x => x.invite === vendorInvite.value.trim().toUpperCase());
+      if (!s) { ElementPlus.ElMessage.error('邀请码无效'); return; }
+      vendorSupplierId.value = s.id;
+      vendorLoggedIn.value = true;
+    }
+    function triggerUpload(target) { uploadTarget.value = target; fileInput.value?.click(); }
+    function handleFile(e) {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const r = new FileReader();
+      r.onload = () => {
+        const arr = vendorForm[uploadTarget.value];
+        if (arr.length < (uploadTarget.value === 'pkgLabels' ? 3 : uploadTarget.value === 'reports' ? 2 : 6)) {
+          arr.push(r.result);
+        }
+        e.target.value = '';
+      };
+      r.readAsDataURL(file);
+    }
+    function submitVendor() {
+      const supplier = currentSupplier.value;
+      if (!canSubmit.value) { ElementPlus.ElMessage.warning('请完成必填项'); return; }
+      const item = {
+        id: uid(),
+        status: 'pending',
+        supplierId: supplier.id,
+        supplierName: supplier.name,
+        ...JSON.parse(JSON.stringify(vendorForm)),
+        createdAt: now(),
+        updatedAt: now(),
+        review: null,
+        listingSkuName: '',
+        listingSkuTitle: '',
+        platformId: '',
+        platformUrl: '',
+        rejectReason: '',
+      };
+      data.items.unshift(item);
+      saveData();
+      ElementPlus.ElMessage.success('提交成功，运营审核后通知你');
+      // 重置表单
+      Object.assign(vendorForm, {
+        spuName: '', brand: '', material: '', size: '', compartments: '',
+        capacity: '', boxQty: '', price: '', moq: '', barcode: '',
+        pkgLabels: [], realPhotos: [], reports: [], remark: '',
+      });
+      vendorInvite.value = '';
+      vendorLoggedIn.value = false;
+    }
+
+    /* 审核工作台 */
+    const pendingList = computed(() => data.items.filter(i => i.status === 'pending'));
+    const pendingCount = computed(() => pendingList.value.length);
+    const readyList = computed(() => data.items.filter(i => i.status === 'ready'));
+
+    function selectReview(item) {
+      currentReviewId.value = item.id;
+      // 填充 reviewForm
+      if (!item.review) {
+        Object.assign(reviewForm, makeEmptyReviewForm());
+      } else {
+        Object.assign(reviewForm, JSON.parse(JSON.stringify(item.review)));
+      }
+      runReviewRules();
+    }
+    function runReviewRules() {
+      const r = currentReview.value;
+      const rules = [];
+      if (!r.brand || r.brand === '无') rules.push({ level: 'err', msg: '餐厨用品类目不允许无品牌，需跟厂家确认' });
+      if (!r.pkgLabels.length) rules.push({ level: 'err', msg: '缺少包装标签照片' });
+      if (!r.realPhotos.length) rules.push({ level: 'err', msg: '缺少产品实拍图' });
+      if (!r.barcode) rules.push({ level: 'warn', msg: '未填条形码，快驴会要求填 000' });
+      if (!reviewForm.category || reviewForm.category.length < 3) rules.push({ level: 'err', msg: '未选择末级类目（需选到第三级）' });
+      if (!reviewForm.grossWeight) rules.push({ level: 'err', msg: '未填毛重' });
+      reviewRules.value = rules;
+    }
+    watch([() => reviewForm.category, () => reviewForm.grossWeight, () => reviewForm.buAlias, () => reviewForm.shelfLife, () => reviewForm.transport, () => reviewForm.storage], runReviewRules);
+
+    function approveReview() {
+      const r = currentReview.value;
+      if (!r) return;
+      runReviewRules();
+      if (reviewRules.value.some(x => x.level === 'err')) {
+        ElementPlus.ElMessage.error('请先处理红色校验项');
+        return;
+      }
+      // 构造类目路径
+      const path = reviewForm.category.join(' / ');
+      reviewForm.categoryPath = path;
+      // 生成 SKU 名称（餐盒是标品类）
+      const skuName = `${r.spuName} ${r.compartments} ${r.capacity}ml ${r.boxQty}`;
+      const skuTitle = `${r.spuName} ${r.compartments} ${r.brand}`;
+      r.review = JSON.parse(JSON.stringify(reviewForm));
+      r.listingSkuName = skuName;
+      r.listingSkuTitle = skuTitle;
+      r.status = 'ready';
+      r.updatedAt = now();
+      saveData();
+      ElementPlus.ElMessage.success('审核通过，已生成上架作业单');
+      currentReviewId.value = null;
+    }
+    function rejectReview() {
+      const r = currentReview.value;
+      if (!r) return;
+      ElementPlus.ElMessageBox.prompt('请填写驳回理由（厂家会看到）', '驳回', { confirmButtonText: '确认驳回', cancelButtonText: '取消', inputPlaceholder: '如：品牌需提供有效资质' })
+        .then(({ value }) => {
+          r.status = 'rejected';
+          r.rejectReason = value;
+          r.updatedAt = now();
+          saveData();
+          ElementPlus.ElMessage.success('已驳回');
+          currentReviewId.value = null;
+        }).catch(() => {});
+    }
+
+    /* 上架作业单 */
+    function copyText(text) {
+      if (!text) return;
+      navigator.clipboard.writeText(text).then(() => ElementPlus.ElMessage.success('已复制'));
+    }
+    function copyAll(item) {
+      const lines = [
+        `【SPU 名称】${item.spuName}`,
+        `【品牌】${item.brand}`,
+        `【事业部别名】${item.review?.buAlias || ''}`,
+        `【类目】${item.review?.categoryPath || ''}`,
+        `【SKU 名称】${item.listingSkuName}`,
+        `【SKU 标题】${item.listingSkuTitle}`,
+        `【规格/内包装】${item.size} ${item.compartments}`,
+        `【箱规/外包装】${item.boxQty}`,
+        `【毛重】${item.review?.grossWeight || ''} kg`,
+        `【保质期】${item.review?.shelfLife || '无保质期'}${item.review?.shelfLife === '自定义' ? '（'+(item.review?.shelfLifeCustom||'')+'）' : ''}`,
+        `【运输方式】${item.review?.transport || '常温运输'}`,
+        `【贮存方式】${item.review?.storage || '常温'}`,
+        `【条码类型】${item.barcode ? '国际条形码' : '无（填 000）'}`,
+        `【条形码号】${item.barcode || '000'}`,
+        `【标签图】包装标签照片第 1 张`,
+        `【主图】白底或纯色底`,
+        `【详情文案】${item.review?.sellingPoints || ''} ${item.review?.sceneText || ''} ${item.review?.specTable || ''}`,
+      ];
+      copyText(lines.join('\n'));
+    }
+    function downloadImages(item) {
+      // 原型：打包所有图片到一个页面展示 + 提示另存
+      ElementPlus.ElMessageBox.alert(
+        `<div style="font-size:13px;line-height:1.8;">演示环境暂不支持 ZIP 打包，可在右侧预览区右键保存每一张。<br/>实际工程中会生成 <code>${item.spuName.replace(/\s+/g, '_')}.zip</code> 含所有图片 + 字段 Excel。</div>`,
+        '📦 打包下载', { dangerouslyUseHTMLString: true });
+    }
+    function markListed(item) {
+      ElementPlus.ElMessageBox.prompt('快驴商品链接（可选，也可以只填商品 ID）', '标记已上架', { inputPlaceholder: '如 https://seller.kuailv.meituan.com/product/8823147', inputValue: item.platformUrl })
+        .then(({ value }) => {
+          item.platformUrl = value;
+          const m = value?.match(/(\d{5,})/);
+          if (m && !item.platformId) item.platformId = 'KL-SPU-' + m[1];
+          item.status = 'listed';
+          item.updatedAt = now();
+          saveData();
+          ElementPlus.ElMessage.success('已标记为已上架');
+        }).catch(() => {});
+    }
+
+    /* 历史查询 */
+    const filteredHistory = computed(() => {
+      let list = [...data.items].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+      if (historyFilter.keyword) {
+        const k = historyFilter.keyword.toLowerCase();
+        list = list.filter(i =>
+          i.spuName.toLowerCase().includes(k) ||
+          i.supplierName.toLowerCase().includes(k) ||
+          i.brand.toLowerCase().includes(k)
+        );
+      }
+      if (historyFilter.status) list = list.filter(i => i.status === historyFilter.status);
+      if (historyFilter.dateRange?.length === 2) {
+        const [s, e] = historyFilter.dateRange;
+        list = list.filter(i => {
+          const t = new Date(i.createdAt).getTime();
+          return t >= s.getTime() && t <= e.getTime();
+        });
+      }
+      return list;
+    });
+
+    function formatTime(t) {
+      if (!t) return '';
+      const d = new Date(t);
+      const pad = n => n.toString().padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+    function statusLabel(s) {
+      return { draft: '草稿', pending: '待审核', rejected: '已驳回', ready: '待上架', listed: '已上架', offline: '已下架' }[s] || s;
+    }
+    function viewDetail(row) { detailItem.value = row; detailVisible.value = true; }
+    function offlineItem(row) { ElementPlus.ElMessageBox.confirm('确认下架该商品？').then(() => { row.status = 'offline'; saveData(); ElementPlus.ElMessage.success('已下架'); }).catch(() => {}); }
+    function relistItem(row) { row.status = 'listed'; saveData(); ElementPlus.ElMessage.success('已重新上架'); }
+    function deleteItem(row) { ElementPlus.ElMessageBox.confirm('删除后无法恢复', '确认删除', { type: 'warning' }).then(() => { const idx = data.items.findIndex(x => x.id === row.id); if (idx >= 0) data.items.splice(idx, 1); saveData(); ElementPlus.ElMessage.success('已删除'); }).catch(() => {}); }
+
+    function makeEmptyReviewForm() {
+      return {
+        category: [], categoryPath: '', grossWeight: '', shelfLife: '无保质期', shelfLifeCustom: '',
+        transport: '常温运输', storage: '常温', buAlias: '',
+        sellingPoints: '', sceneText: '', specTable: '',
+      };
+    }
+
+    onMounted(() => { saveData(); });
+
+    return {
+      tab, data, resetData,
+      vendorLoggedIn, vendorInvite, vendorForm, brandOptions, currentSupplier, canSubmit,
+      vendorLogin, triggerUpload, handleFile, submitVendor, fileInput,
+      currentReviewId, currentReview, pendingList, pendingCount, readyList, reviewForm, reviewRules,
+      selectReview, approveReview, rejectReview,
+      copyText, copyAll, downloadImages, markListed,
+      historyFilter, filteredHistory, formatTime, statusLabel,
+      detailVisible, detailItem, viewDetail, offlineItem, relistItem, deleteItem,
+      categoryOptions: CATEGORY_TREE,
+    };
+  }
+});
+
+app.use(ElementPlus);
+// Element Plus 图标 CDN 挂载全局名因版本而异，这里做安全兜底
+const iconsLib = typeof ElementPlusIconsVue !== 'undefined' ? ElementPlusIconsVue :
+                 (typeof window['ElementPlus.Icons'] !== 'undefined' ? window['ElementPlus.Icons'] : {});
+for (const [key, comp] of Object.entries(iconsLib)) {
+  if (typeof comp === 'object' && comp.render) app.component(key, comp);
+}
+app.mount('#app');
+</script>
+</body>
+</html>
