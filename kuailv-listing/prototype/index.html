@@ -1218,11 +1218,12 @@
                 <span v-for="(l, i) in (row.listings || [])" :key="i" class="shop-tag">{{ l.shop }}</span>
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="240" fixed="right">
+            <el-table-column label="操作" width="300" fixed="right">
               <template #default="{row}">
                 <button class="inline-btn" @click="viewDetail(row)">查看</button>
                 <button class="inline-btn" @click="openListDialog(row)">上架到店铺</button>
                 <button class="inline-btn" @click="relistCopy(row)">再次上架</button>
+                <button class="inline-btn danger" v-if="row.status !== 'listed' && row.status !== 'pending'" @click="deleteItem(row)">删除</button>
               </template>
             </el-table-column>
           </el-table>
@@ -1340,15 +1341,23 @@
         <div class="page-card">
           <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
             <span style="font-size:15px;font-weight:600;">🎯 跟随模式</span>
-            <el-select v-model="followId" placeholder="选择待上架商品" size="small" style="width:320px;">
+            <el-select v-model="followIds" multiple collapse-tags collapse-tags-tooltip :max-collapse-tags="2"
+                       placeholder="选择上架商品（可多选批量，按勾选顺序逐个上架）" size="small" style="width:400px;">
               <el-option v-for="item in assistableList" :key="item.id" :label="item.spuName" :value="item.id"></el-option>
             </el-select>
+            <el-button size="small" @click="selectAllFollow">全选</el-button>
+            <el-button size="small" v-if="followIds.length" @click="followIds = []; queuePos = 0;">清空队列</el-button>
+            <span v-if="followIds.length > 1" class="status ready">批量队列 {{ queuePos + 1 }} / {{ followIds.length }}</span>
             <span v-if="followItem" class="text-muted text-small">步骤 {{ followIdx + 1 }} / {{ followSteps.length }}</span>
           </div>
 
           <template v-if="followItem">
             <!-- 当前步骤大卡 -->
             <div class="follow-card">
+              <div style="font-size:13px;font-weight:600;color:#1f5dd0;margin-bottom:10px;">
+                📦 {{ followItem.spuName }}
+                <span v-if="followIds.length > 1" style="color:#909399;font-weight:400;">（批量第 {{ queuePos + 1 }} 个 / 共 {{ followIds.length }} 个，点「下一步」走完本商品后自动切下一个）</span>
+              </div>
               <div class="follow-head">
                 <span class="follow-step-no">{{ followIdx + 1 }}</span>
                 <div>
@@ -1381,7 +1390,7 @@
               </div>
             </div>
           </template>
-          <div v-else style="padding:30px;text-align:center;color:#c0c4cc;font-size:13px;">← 先选择一个商品开始跟随上架</div>
+          <div v-else style="padding:30px;text-align:center;color:#c0c4cc;font-size:13px;">← 先选择一个（或多个）商品开始跟随上架</div>
         </div>
 
         <!-- 图片推送 -->
@@ -2453,14 +2462,19 @@ const app = createApp({
       };
       return map[deviceStatus.state] || '未检测到设备';
     });
-    const followId = ref('');
+    const followIds = ref([]);
+    const queuePos = ref(0);
     const followIdx = ref(0);
     const pushId = ref('');
     const pushFiles = ref([]);
     const pushInput = ref(null);
 
     const assistableList = computed(() => data.items.filter(i => i.status === 'ready' || i.status === 'listed'));
-    const followItem = computed(() => data.items.find(i => i.id === followId.value) || null);
+    const followItem = computed(() => data.items.find(i => i.id === followIds.value[queuePos.value]) || null);
+    /* 全选当前可上架商品，按列表顺序排队 */
+    function selectAllFollow() { followIds.value = assistableList.value.map(i => i.id); queuePos.value = 0; followIdx.value = 0; }
+    /* 重新选择队列时重置进度 */
+    watch(followIds, () => { queuePos.value = 0; followIdx.value = 0; });
     const followSteps = computed(() => buildFollowSteps(followItem.value));
 
     function klCode(item) { return item.id.slice(-6).toUpperCase(); }
@@ -2490,11 +2504,16 @@ const app = createApp({
       ];
     }
     function followNext() {
-      if (followIdx.value >= followSteps.value.length - 1) {
+      if (followIdx.value < followSteps.value.length - 1) { followIdx.value++; return; }
+      /* 当前商品走完最后一步：批量队列自动切下一个 */
+      if (queuePos.value < followIds.value.length - 1) {
+        queuePos.value++;
+        followIdx.value = 0;
+        const next = followItem.value;
+        ElementPlus.ElMessage.success('切换到下一个：' + (next ? next.spuName : ''));
+      } else {
         ElementPlus.ElMessage.success('全部步骤完成，去「上架作业单」回填快驴商品链接');
-        return;
       }
-      followIdx.value++;
     }
     function applyDeviceInfo(j) {
       deviceStatus.checked = true;
@@ -2906,6 +2925,8 @@ const app = createApp({
       }
     }
 
+    /* 多机协同：切到作业单/真机助手/资料库时自动拉最新数据，能看到其他电脑刚审完、刚上架的内容 */
+    watch(tab, (t) => { if (t === 'job' || t === 'assist' || t === 'library') refreshFromServer(); });
     onMounted(() => { saveData(); refreshFromServer(); loadDimStatus(); });
 
     return {
@@ -2925,7 +2946,7 @@ const app = createApp({
       brandOptions: BRANDS,
       historyFilter, filteredHistory, formatTime, statusLabel,
       detailVisible, detailItem, viewDetail, offlineItem, relistItem, deleteItem,
-      deviceStatus, deviceStateText, checkDevice, restartAdb, followId, followIdx, followItem, followSteps, followNext,
+      deviceStatus, deviceStateText, checkDevice, restartAdb, followIds, queuePos, selectAllFollow, followIdx, followItem, followSteps, followNext,
       mirror, typeText, toggleMirror, onModeChange, onMirrorDown, onMirrorUp, onMirrorCancel, gesture, sendText, sendClear, sendKey, sendFollowField, toggleDim,
       assistableList, pushId, pushFiles, pushInput, pickImages, handlePickImages, pushImages,
       categoryOptions: CATEGORY_TREE,

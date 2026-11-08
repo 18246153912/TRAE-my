@@ -58,7 +58,8 @@ function createMainWindow(cfg) {
     },
   });
 
-  win.loadURL(cfg.serverUrl);
+  // 每次启动清一次 HTTP 缓存，避免服务器网页更新后客户端仍显示旧版本
+  session.defaultSession.clearCache().finally(() => win.loadURL(cfg.serverUrl));
 
   // 外部链接一律交给系统浏览器，应用窗口内只操作系统本身
   win.webContents.setWindowOpenHandler(({ url }) => {
