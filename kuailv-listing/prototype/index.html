@@ -720,8 +720,8 @@
 
         <div class="page-card">
           <el-table :data="supplierList" style="width:100%" empty-text="还没有厂家账号，点右上角「新增厂家」开始录入">
-            <el-table-column prop="name" label="厂家名称" min-width="220" />
-            <el-table-column prop="account" label="登录账号" width="150" />
+            <el-table-column prop="name" label="厂家名称" min-width="220"></el-table-column>
+            <el-table-column prop="account" label="登录账号" width="150"></el-table-column>
             <el-table-column prop="remark" label="备注" min-width="180">
               <template #default="{ row }">{{ row.remark || '—' }}</template>
             </el-table-column>
@@ -842,7 +842,7 @@
                   :props="{expandTrigger: 'hover', checkStrictly: true}"
                   placeholder="逐级选择，必须选到最末级"
                   style="width:100%;max-width:480px;"
-                />
+               ></el-cascader>
               </el-form-item>
               <el-form-item label="SKU 命名规则" required>
                 <div style="font-size:13px;color:#606266;line-height:1.8;">
@@ -852,7 +852,7 @@
                 </div>
               </el-form-item>
               <el-form-item label="毛重（kg）" required>
-                <el-input v-model="reviewForm.grossWeight" placeholder="如：18.5" style="max-width:200px;" />
+                <el-input v-model="reviewForm.grossWeight" placeholder="如：18.5" style="max-width:200px;"></el-input>
                 <span style="margin-left:8px;color:#909399;font-size:12px;">整箱毛重</span>
               </el-form-item>
               <el-form-item label="保质期 *" required>
@@ -860,7 +860,7 @@
                   <el-radio-button label="无保质期">无保质期</el-radio-button>
                   <el-radio-button label="自定义">自定义</el-radio-button>
                 </el-radio-group>
-                <el-input v-if="reviewForm.shelfLife === '自定义'" v-model="reviewForm.shelfLifeCustom" placeholder="如：12 个月" style="width:160px;margin-left:8px;" />
+                <el-input v-if="reviewForm.shelfLife === '自定义'" v-model="reviewForm.shelfLifeCustom" placeholder="如：12 个月" style="width:160px;margin-left:8px;"></el-input>
               </el-form-item>
               <el-form-item label="运输方式 *" required>
                 <el-radio-group v-model="reviewForm.transport">
@@ -877,7 +877,7 @@
                 </el-radio-group>
               </el-form-item>
               <el-form-item label="事业部别名">
-                <el-input v-model="reviewForm.buAlias" placeholder="不同地区俗称，如：外卖方盒、打包盒" style="max-width:360px;" />
+                <el-input v-model="reviewForm.buAlias" placeholder="不同地区俗称，如：外卖方盒、打包盒" style="max-width:360px;"></el-input>
               </el-form-item>
             </el-form>
 
@@ -914,13 +914,13 @@
             <div class="section-title">④ 详情页模板</div>
             <el-form label-width="120px" size="default">
               <el-form-item label="卖点文案">
-                <el-input v-model="reviewForm.sellingPoints" type="textarea" :rows="2" placeholder="如：食品级 PP 材质 · 微波炉冰箱通用 · 防漏加厚 · 一箱 500 个" />
+                <el-input v-model="reviewForm.sellingPoints" type="textarea" :rows="2" placeholder="如：食品级 PP 材质 · 微波炉冰箱通用 · 防漏加厚 · 一箱 500 个"></el-input>
               </el-form-item>
               <el-form-item label="场景文案">
-                <el-input v-model="reviewForm.sceneText" type="textarea" :rows="2" placeholder="如：外卖打包、食堂配餐、烧烤露营、生鲜分装" />
+                <el-input v-model="reviewForm.sceneText" type="textarea" :rows="2" placeholder="如：外卖打包、食堂配餐、烧烤露营、生鲜分装"></el-input>
               </el-form-item>
               <el-form-item label="规格说明">
-                <el-input v-model="reviewForm.specTable" type="textarea" :rows="3" placeholder="如：材质 PP｜温度范围 -20℃ ~ 120℃｜密封：带盖可微波｜颜色：本色/黑白" />
+                <el-input v-model="reviewForm.specTable" type="textarea" :rows="3" placeholder="如：材质 PP｜温度范围 -20℃ ~ 120℃｜密封：带盖可微波｜颜色：本色/黑白"></el-input>
               </el-form-item>
             </el-form>
 
@@ -951,55 +951,55 @@
         <el-dialog v-model="manualDialogVisible" title="手动添加产品（电脑端直接创建）" width="560px" top="6vh">
           <el-form label-width="92px" size="default">
             <el-form-item label="SPU 名称" required>
-              <el-input v-model="manualForm.spuName" placeholder="例：加厚一次性餐盒 750ml" maxlength="60" />
+              <el-input v-model="manualForm.spuName" placeholder="例：加厚一次性餐盒 750ml" maxlength="60"></el-input>
             </el-form-item>
             <el-form-item label="品牌" required>
               <el-select v-model="manualForm.brand" filterable allow-create default-first-option placeholder="选择或输入新品牌" style="width:100%;">
-                <el-option v-for="b in brandOptions" :key="b" :label="b" :value="b" />
+                <el-option v-for="b in brandOptions" :key="b" :label="b" :value="b"></el-option>
               </el-select>
             </el-form-item>
             <el-form-item label="类目" required>
-              <el-cascader v-model="manualForm.category" :options="categoryOptions" placeholder="选择到第三级类目" style="width:100%;" />
+              <el-cascader v-model="manualForm.category" :options="categoryOptions" placeholder="选择到第三级类目" style="width:100%;"></el-cascader>
             </el-form-item>
             <el-form-item label="SKU 名称">
-              <el-input v-model="manualForm.listingSkuName" placeholder="留空则自动按 SPU + 规格生成" maxlength="80" />
+              <el-input v-model="manualForm.listingSkuName" placeholder="留空则自动按 SPU + 规格生成" maxlength="80"></el-input>
             </el-form-item>
             <el-form-item label="规格">
-              <el-input v-model="manualForm.specName" placeholder="例：750ml×300只/箱" />
+              <el-input v-model="manualForm.specName" placeholder="例：750ml×300只/箱"></el-input>
             </el-form-item>
             <el-form-item label="箱规">
-              <el-input v-model="manualForm.boxQty" placeholder="例：300只/箱" />
+              <el-input v-model="manualForm.boxQty" placeholder="例：300只/箱"></el-input>
             </el-form-item>
             <el-form-item label="毛重">
-              <el-input v-model="manualForm.grossWeight" placeholder="例：8.5kg" />
+              <el-input v-model="manualForm.grossWeight" placeholder="例：8.5kg"></el-input>
             </el-form-item>
             <el-form-item label="条形码">
-              <el-input v-model="manualForm.barcode" placeholder="选填" />
+              <el-input v-model="manualForm.barcode" placeholder="选填"></el-input>
             </el-form-item>
             <el-form-item label="保质期">
               <el-select v-model="manualForm.shelfLife" style="width:100%;">
-                <el-option label="无保质期" value="无保质期" />
-                <el-option label="6 个月" value="6个月" />
-                <el-option label="12 个月" value="12个月" />
-                <el-option label="18 个月" value="18个月" />
-                <el-option label="24 个月" value="24个月" />
+                <el-option label="无保质期" value="无保质期"></el-option>
+                <el-option label="6 个月" value="6个月"></el-option>
+                <el-option label="12 个月" value="12个月"></el-option>
+                <el-option label="18 个月" value="18个月"></el-option>
+                <el-option label="24 个月" value="24个月"></el-option>
               </el-select>
             </el-form-item>
             <el-form-item label="运输方式">
               <el-select v-model="manualForm.transport" style="width:100%;">
-                <el-option label="常温运输" value="常温运输" />
-                <el-option label="冷链运输" value="冷链运输" />
+                <el-option label="常温运输" value="常温运输"></el-option>
+                <el-option label="冷链运输" value="冷链运输"></el-option>
               </el-select>
             </el-form-item>
             <el-form-item label="贮存方式">
               <el-select v-model="manualForm.storage" style="width:100%;">
-                <el-option label="常温" value="常温" />
-                <el-option label="冷藏" value="冷藏" />
-                <el-option label="冷冻" value="冷冻" />
+                <el-option label="常温" value="常温"></el-option>
+                <el-option label="冷藏" value="冷藏"></el-option>
+                <el-option label="冷冻" value="冷冻"></el-option>
               </el-select>
             </el-form-item>
             <el-form-item label="详情文案">
-              <el-input v-model="manualForm.sellingPoints" type="textarea" :rows="3" placeholder="卖点 / 详情描述，选填" />
+              <el-input v-model="manualForm.sellingPoints" type="textarea" :rows="3" placeholder="卖点 / 详情描述，选填"></el-input>
             </el-form-item>
             <el-form-item label="包装标签图">
               <el-upload :http-request="e => manualUpload(e, 'pkgLabels')" :show-file-list="false" accept="image/*">
@@ -1111,8 +1111,8 @@
                 ④ 图片先用厂家实拍图占位，有白底图再替换
               </div>
 
-              <el-input v-model="item.platformId" placeholder="快驴商品 ID（发布后回填）" size="small" style="margin-top:12px;" />
-              <el-input v-model="item.platformUrl" placeholder="快驴商品链接（发布后回填）" size="small" style="margin-top:8px;" />
+              <el-input v-model="item.platformId" placeholder="快驴商品 ID（发布后回填）" size="small" style="margin-top:12px;"></el-input>
+              <el-input v-model="item.platformUrl" placeholder="快驴商品链接（发布后回填）" size="small" style="margin-top:8px;"></el-input>
             </div>
           </div>
         </div>
@@ -1127,16 +1127,16 @@
 
         <div class="page-card">
           <div class="history-toolbar">
-            <el-input v-model="historyFilter.keyword" placeholder="搜 SPU 名称 / 厂家 / 品牌" clearable style="width:240px;" size="small" />
+            <el-input v-model="historyFilter.keyword" placeholder="搜 SPU 名称 / 厂家 / 品牌" clearable style="width:240px;" size="small"></el-input>
             <el-select v-model="historyFilter.status" placeholder="全部状态" clearable style="width:140px;" size="small">
-              <el-option label="草稿" value="draft" />
-              <el-option label="待审核" value="pending" />
-              <el-option label="已驳回" value="rejected" />
-              <el-option label="待上架" value="ready" />
-              <el-option label="已上架" value="listed" />
-              <el-option label="已下架" value="offline" />
+              <el-option label="草稿" value="draft"></el-option>
+              <el-option label="待审核" value="pending"></el-option>
+              <el-option label="已驳回" value="rejected"></el-option>
+              <el-option label="待上架" value="ready"></el-option>
+              <el-option label="已上架" value="listed"></el-option>
+              <el-option label="已下架" value="offline"></el-option>
             </el-select>
-            <el-date-picker v-model="historyFilter.dateRange" type="daterange" range-separator="至" start-placeholder="开始" end-placeholder="结束" size="small" />
+            <el-date-picker v-model="historyFilter.dateRange" type="daterange" range-separator="至" start-placeholder="开始" end-placeholder="结束" size="small"></el-date-picker>
             <div style="margin-left:auto;color:#909399;font-size:13px;">共 {{ filteredHistory.length }} 条</div>
           </div>
 
@@ -1147,7 +1147,7 @@
                 <div style="font-size:12px;color:#909399;">{{ row.brand }} · {{ row.l3 || '—' }} · {{ row.specName || '—' }}</div>
               </template>
             </el-table-column>
-            <el-table-column prop="supplierName" label="厂家" width="140" />
+            <el-table-column prop="supplierName" label="厂家" width="140"></el-table-column>
             <el-table-column prop="createdAt" label="提交时间" width="160">
               <template #default="{row}">{{ formatTime(row.createdAt) }}</template>
             </el-table-column>
@@ -1192,7 +1192,7 @@
 
         <div class="page-card">
           <div class="history-toolbar">
-            <el-input v-model="libraryKeyword" placeholder="搜 标题 / 品牌 / 厂家" clearable style="width:260px;" size="small" />
+            <el-input v-model="libraryKeyword" placeholder="搜 标题 / 品牌 / 厂家" clearable style="width:260px;" size="small"></el-input>
             <div style="margin-left:auto;color:#909399;font-size:13px;">共 {{ libraryList.length }} 条</div>
           </div>
 
@@ -1203,7 +1203,7 @@
                 <div style="font-size:12px;color:#909399;">{{ row.brand }} · {{ row.categoryPath || '—' }}</div>
               </template>
             </el-table-column>
-            <el-table-column prop="supplierName" label="厂家" width="150" />
+            <el-table-column prop="supplierName" label="厂家" width="150"></el-table-column>
             <el-table-column label="提交时间" width="150">
               <template #default="{row}">{{ formatTime(row.createdAt) }}</template>
             </el-table-column>
@@ -1234,7 +1234,7 @@
             已上架 {{ (listDialogItem?.listings || []).length }} 次 · 已上店铺：{{ (listDialogItem?.listings || []).map(l => l.shop).join('、') || '无' }}
           </div>
           <el-select v-model="listDialogShop" placeholder="选择店铺" style="width:100%;">
-            <el-option v-for="s in shopOptions" :key="s" :label="s" :value="s" />
+            <el-option v-for="s in shopOptions" :key="s" :label="s" :value="s"></el-option>
           </el-select>
           <template #footer>
             <el-button @click="listDialogVisible = false">取消</el-button>
@@ -1285,15 +1285,15 @@
             <span style="font-size:15px;font-weight:600;">📱 手机实时画面</span>
             <el-button size="small" type="primary" @click="toggleMirror">{{ mirror.on ? '暂停画面' : '开始显示手机画面' }}</el-button>
             <el-select v-model="mirror.interval" size="small" style="width:130px" :disabled="mirror.on">
-              <el-option label="流畅 0.3秒" :value="300" />
-              <el-option label="标准 0.5秒" :value="500" />
-              <el-option label="省资源 1秒" :value="1000" />
+              <el-option label="流畅 0.3秒" :value="300"></el-option>
+              <el-option label="标准 0.5秒" :value="500"></el-option>
+              <el-option label="省资源 1秒" :value="1000"></el-option>
             </el-select>
             <el-select v-model="mirror.mode" size="small" style="width:150px" @change="onModeChange">
-              <el-option label="截图模式（稳定·推荐）" value="snap" />
-              <el-option label="直播模式（流畅但可能花屏）" value="live" />
+              <el-option label="截图模式（稳定·推荐）" value="snap"></el-option>
+              <el-option label="直播模式（流畅但可能花屏）" value="live"></el-option>
             </el-select>
-            <el-switch v-model="mirror.dim" size="small" inline-prompt active-text="挂机暗屏" inactive-text="正常亮度" @change="toggleDim" />
+            <el-switch v-model="mirror.dim" size="small" inline-prompt active-text="挂机暗屏" inactive-text="正常亮度" @change="toggleDim"></el-switch>
             <span v-if="mirror.error" style="font-size:12px;color:#f56c6c;">{{ mirror.error }}</span>
             <span v-if="mirror.lastTap" class="text-muted text-small">上次点击坐标：{{ mirror.lastTap }}</span>
             <span class="text-muted text-small">点击画面 = 手指点击手机</span>
@@ -1341,7 +1341,7 @@
           <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
             <span style="font-size:15px;font-weight:600;">🎯 跟随模式</span>
             <el-select v-model="followId" placeholder="选择待上架商品" size="small" style="width:320px;">
-              <el-option v-for="item in assistableList" :key="item.id" :label="item.spuName" :value="item.id" />
+              <el-option v-for="item in assistableList" :key="item.id" :label="item.spuName" :value="item.id"></el-option>
             </el-select>
             <span v-if="followItem" class="text-muted text-small">步骤 {{ followIdx + 1 }} / {{ followSteps.length }}</span>
           </div>
@@ -1389,7 +1389,7 @@
           <div style="font-size:15px;font-weight:600;margin-bottom:12px;">📷 图片推送到手机相册</div>
           <div class="history-toolbar">
             <el-select v-model="pushId" placeholder="选择商品" size="small" style="width:280px;">
-              <el-option v-for="item in assistableList" :key="item.id" :label="item.spuName" :value="item.id" />
+              <el-option v-for="item in assistableList" :key="item.id" :label="item.spuName" :value="item.id"></el-option>
             </el-select>
             <el-button size="small" @click="pickImages">选择本地图片</el-button>
             <el-button size="small" type="primary" :disabled="!pushFiles.length || !deviceStatus.connected" @click="pushImages">

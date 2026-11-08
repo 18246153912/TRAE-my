@@ -337,9 +337,15 @@ def deploy(cfg, log):
             log('[6/6] 未启用 HTTPS，按 HTTP 交付')
 
         log('冒烟验证 ...')
-        time.sleep(2)
-        _, o, _ = run('curl -s -o /dev/null -w "%{{http_code}}" http://127.0.0.1:8000/api/health')
-        if o.strip() != '200':
+        # gunicorn 重启后需要数秒就绪，重试最多 30 秒
+        ok_health = False
+        for _ in range(10):
+            time.sleep(3)
+            _, o, _ = run('curl -s -o /dev/null -w "%{{http_code}}" http://127.0.0.1:8000/api/health')
+            if o.strip() == '200':
+                ok_health = True
+                break
+        if not ok_health:
             raise RuntimeError('后端服务未正常启动，健康检查返回: ' + o.strip())
         port_no = 443 if scheme == 'https' else 80
         base = '{0}://{1}'.format(scheme, server_name)
