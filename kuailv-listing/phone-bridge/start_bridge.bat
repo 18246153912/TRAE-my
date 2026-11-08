@@ -8,5 +8,10 @@ if %errorlevel% neq 0 (
   pause
   exit /b 1
 )
+python -c "import PIL" 2>nul
+if %errorlevel% neq 0 (
+  echo 首次运行，正在自动安装图像组件 Pillow，请稍候 ...
+  python -m pip install Pillow -q -i https://pypi.tuna.tsinghua.edu.cn/simple
+)
 python phone_bridge.py
 pause

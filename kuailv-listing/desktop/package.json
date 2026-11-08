@@ -1,0 +1,38 @@
+{
+  "name": "kuailv-listing-admin",
+  "version": "3.0.0",
+  "description": "餐厨产品录入系统 · 运营管理端",
+  "main": "main.js",
+  "author": "haohuolang",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win nsis"
+  },
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "net.haohuolang.kuailv",
+    "productName": "餐厨产品录入系统",
+    "files": [
+      "main.js",
+      "preload.js",
+      "config.html",
+      "icon.png"
+    ],
+    "win": {
+      "target": "nsis",
+      "artifactName": "餐厨产品录入系统-Setup-${version}.exe"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "餐厨产品录入系统"
+    }
+  }
+}

@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>餐厨产品录入系统</title>
+<link rel="stylesheet" href="/lib/element-plus.css" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #f5f7fa;
+    color: #1f2937;
+  }
+  #app { max-width: 480px; margin: 0 auto; min-height: 100vh; background: #f5f7fa; }
+
+  /* ===== 登录页 ===== */
+  .login-wrap { padding: 60px 24px 40px; }
+  .login-box { text-align: center; }
+  .login-logo { font-size: 44px; }
+  .login-title { font-weight: 600; font-size: 18px; margin: 12px 0 4px; }
+  .login-sub { font-size: 12px; color: #909399; margin-bottom: 28px; }
+  .login-tip { margin-top: 20px; font-size: 12px; color: #c0c4cc; line-height: 1.8; }
+
+  /* ===== 主界面 ===== */
+  .topbar {
+    position: sticky; top: 0; z-index: 10;
+    background: linear-gradient(90deg, #1f5dd0, #4080ff);
+    color: #fff;
+    padding: 12px 16px;
+    box-shadow: 0 2px 8px rgba(31,93,208,.25);
+  }
+  .topbar .sup-name { font-size: 15px; font-weight: 600; }
+  .topbar .sup-sub { font-size: 11px; opacity: .8; margin-top: 2px; }
+  .topbar .logout {
+    position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+    font-size: 12px; background: rgba(255,255,255,.18); border: none; color: #fff;
+    padding: 5px 12px; border-radius: 14px; cursor: pointer;
+  }
+  .tabs {
+    display: flex; background: #fff; border-bottom: 1px solid #ebeef5;
+    position: sticky; top: 62px; z-index: 10;
+  }
+  .tabs .tab {
+    flex: 1; text-align: center; padding: 12px 0; font-size: 14px; color: #606266;
+    cursor: pointer; border-bottom: 2px solid transparent;
+  }
+  .tabs .tab.active { color: #1f5dd0; font-weight: 500; border-bottom-color: #1f5dd0; }
+  .body { padding: 16px 14px 90px; }
+
+  /* ===== 表单 ===== */
+  .mobile-field { margin-bottom: 16px; }
+  .mobile-field label { display: block; font-size: 12px; color: #606266; margin-bottom: 6px; }
+  .mobile-field label .req { color: #f56c6c; margin-right: 2px; }
+  .mobile-field input, .mobile-field select, .mobile-field textarea {
+    width: 100%; border: 1px solid #dcdfe6; border-radius: 6px;
+    padding: 9px 10px; font-size: 14px; font-family: inherit; background: #fafafa;
+  }
+  .mobile-field input:focus, .mobile-field select:focus, .mobile-field textarea:focus {
+    outline: none; border-color: #1f5dd0; background: #fff;
+  }
+  .field-hint { font-size: 11px; color: #909399; margin-top: 4px; }
+  .sec-title { font-size: 13px; font-weight: 600; margin: 18px 0 8px; color: #1f5dd0; }
+  .sec-sub { font-size: 11px; color: #909399; margin-bottom: 10px; }
+
+  .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .photo-cell {
+    aspect-ratio: 1; border: 1px dashed #dcdfe6; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; background: #fafafa; font-size: 20px; color: #c0c4cc;
+    position: relative; overflow: hidden;
+  }
+  .photo-cell img { width: 100%; height: 100%; object-fit: cover; }
+  .photo-cell .del {
+    position: absolute; top: 2px; right: 2px; width: 18px; height: 18px;
+    background: rgba(0,0,0,.5); color: #fff; border-radius: 50%;
+    font-size: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer;
+  }
+
+  .submit-bar {
+    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 480px; padding: 10px 14px calc(14px + env(safe-area-inset-bottom));
+    background: #fff; border-top: 1px solid #ebeef5; z-index: 10;
+  }
+  .submit-btn {
+    width: 100%; background: #1f5dd0; color: #fff; border: none;
+    padding: 12px; border-radius: 24px; font-size: 15px; font-weight: 500; cursor: pointer;
+  }
+  .submit-btn:disabled { background: #c0c4cc; }
+
+  /* ===== 我的提交 ===== */
+  .mine-empty { text-align: center; color: #c0c4cc; font-size: 13px; padding: 60px 0; }
+  .item-card {
+    background: #fff; border-radius: 8px; padding: 12px; margin-bottom: 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.05); display: flex; gap: 10px;
+  }
+  .item-card .thumb {
+    width: 64px; height: 64px; border-radius: 6px; flex-shrink: 0;
+    background: #f2f6fc; overflow: hidden; display: flex; align-items: center;
+    justify-content: center; color: #c0c4cc; font-size: 20px;
+  }
+  .item-card .thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .item-card .info { flex: 1; min-width: 0; }
+  .item-card .name {
+    font-size: 13px; font-weight: 500; color: #303133;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-bottom: 4px;
+  }
+  .item-card .meta { font-size: 11px; color: #909399; margin-bottom: 6px; }
+  .status {
+    display: inline-block; font-size: 11px; padding: 1px 8px; border-radius: 3px;
+  }
+  .status.pending  { background: #fdf6ec; color: #e6a23c; }
+  .status.rejected { background: #fef0f0; color: #f56c6c; }
+  .status.ready    { background: #ecf3ff; color: #1f5dd0; }
+  .status.listed   { background: #f0f9eb; color: #67c23a; }
+  .status.offline, .status.draft { background: #f4f4f5; color: #909399; }
+  .reject-reason {
+    margin-top: 6px; font-size: 11px; color: #f56c6c; background: #fef0f0;
+    padding: 4px 8px; border-radius: 4px;
+  }
+
+  /* ===== 底部弹层 ===== */
+  .sheet-mask {
+    position: fixed; inset: 0; background: rgba(0,0,0,.38); z-index: 30;
+    display: flex; align-items: flex-end; justify-content: center;
+  }
+  .sheet {
+    width: 100%; max-width: 480px; background: #fff;
+    border-radius: 16px 16px 0 0; padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+    max-height: 75%; display: flex; flex-direction: column;
+  }
+  .sheet-title { text-align: center; font-size: 12px; color: #909399; padding: 8px 0; }
+  .sheet-btn {
+    padding: 13px; text-align: center; font-size: 14px;
+    border-top: 1px solid #f2f6fc; cursor: pointer; color: #303133;
+  }
+  .sheet-btn:active { background: #f5f7fa; }
+  .sheet-btn.cancel { color: #909399; border-top: none; margin-top: 6px; background: #f5f7fa; border-radius: 10px; }
+
+  .brand-field {
+    border: 1px solid #dcdfe6; border-radius: 6px; padding: 9px 10px;
+    font-size: 14px; background: #fafafa; display: flex; align-items: center; cursor: pointer;
+  }
+  .brand-field .ph { color: #c0c4cc; }
+  .brand-field .arrow { margin-left: auto; color: #c0c4cc; }
+  .brand-search {
+    margin: 6px 10px 8px; border: 1px solid #dcdfe6; border-radius: 8px;
+    padding: 9px 12px; font-size: 14px; font-family: inherit; background: #fafafa; flex-shrink: 0;
+  }
+  .brand-search:focus { outline: none; border-color: #1f5dd0; background: #fff; }
+  .brand-list { overflow-y: auto; max-height: 240px; }
+  .brand-item {
+    padding: 11px 16px; font-size: 14px; border-bottom: 1px solid #f2f6fc;
+    cursor: pointer; display: flex; align-items: center; gap: 8px;
+  }
+  .brand-item:active { background: #f5f7fa; }
+  .brand-item .first {
+    margin-left: auto; font-size: 10px; color: #1f5dd0;
+    background: #ecf3ff; border-radius: 3px; padding: 1px 6px;
+  }
+  .brand-empty { padding: 20px; text-align: center; font-size: 12px; color: #909399; }
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- ============ 登录 ============ -->
+  <div v-if="!loggedIn" class="login-wrap">
+    <div class="login-box">
+      <div class="login-logo">📦</div>
+      <div class="login-title">餐厨产品录入系统</div>
+      <div class="login-sub">请使用运营方分配的厂家账号登录（一厂一账号）</div>
+      <div class="mobile-field" style="text-align:left;">
+        <label><span class="req">*</span>账号</label>
+        <input v-model="account" placeholder="厂家账号" autocomplete="username" />
+      </div>
+      <div class="mobile-field" style="text-align:left;">
+        <label><span class="req">*</span>密码</label>
+        <input type="password" v-model="password" placeholder="请输入密码"
+               autocomplete="current-password" @keyup.enter="doLogin" />
+      </div>
+      <button class="submit-btn" style="margin-top:8px;" :disabled="loggingIn" @click="doLogin">
+        {{ loggingIn ? '登录中…' : '登 录' }}
+      </button>
+      <div class="login-tip">没有账号？请联系运营方开通。<br/>账号密码错误请联系运营方重置。</div>
+    </div>
+  </div>
+
+  <!-- ============ 已登录主界面 ============ -->
+  <template v-else>
+    <div class="topbar">
+      <div class="sup-name">👋 {{ supplier.name }}</div>
+      <div class="sup-sub">{{ supplier.contact }} {{ supplier.phone }}</div>
+      <button class="logout" @click="doLogout">退出</button>
+    </div>
+    <div class="tabs">
+      <div class="tab" :class="{active: tab==='form'}" @click="tab='form'">📝 新品录入</div>
+      <div class="tab" :class="{active: tab==='mine'}" @click="switchMine">📋 我的提交（{{ myItems.length }}）</div>
+    </div>
+
+    <!-- 录入表单 -->
+    <div v-show="tab==='form'" class="body">
+      <div class="mobile-field">
+        <label><span class="req">*</span>二级类目</label>
+        <select v-model="form.l2" @change="onL2Change">
+          <option value="">请选择</option>
+          <option v-for="c in categoryKeys" :key="c" :value="c">{{ c }}</option>
+        </select>
+      </div>
+
+      <div class="mobile-field" v-if="form.l2">
+        <label><span class="req">*</span>三级类目</label>
+        <select v-model="form.l3" @change="form.attrs = {}">
+          <option value="">请选择</option>
+          <option v-for="c in l3Options" :key="c" :value="c">{{ c }}</option>
+        </select>
+        <div class="field-hint">一级类目固定：餐厨用品 / 一次性餐具 / {{ form.l2 || '—' }} / {{ form.l3 || '—' }}</div>
+      </div>
+
+      <div class="mobile-field">
+        <label><span class="req">*</span>商品标题</label>
+        <input v-model="form.spuName" placeholder="如：一次性叉子 PP材质 1000只/箱" />
+        <div class="field-hint">含材质/规格/装箱量，不要带品牌字样</div>
+      </div>
+
+      <div class="mobile-field">
+        <label><span class="req">*</span>品牌</label>
+        <div class="brand-field" @click="openBrandPicker">
+          <span v-if="form.brand">{{ form.brand }}</span>
+          <span v-else class="ph">点击输入 / 搜索品牌</span>
+          <span class="arrow">›</span>
+        </div>
+        <div class="field-hint">点击后输入品牌名称，选搜索结果第一条即可</div>
+      </div>
+
+      <div class="mobile-field">
+        <label><span class="req">*</span>卖点描述（≤300字）</label>
+        <textarea v-model="form.sellingPoints" rows="3" maxlength="300"
+          placeholder="如：食品级 PP 材质 · 加厚耐折 · 一箱 1000 只"></textarea>
+      </div>
+
+      <div class="sec-title">规格与价格（快驴上架必填）</div>
+
+      <div class="mobile-field">
+        <label><span class="req">*</span>规格名称</label>
+        <input v-model="form.specName" placeholder="如：1000只/箱" />
+      </div>
+
+      <div class="mobile-field">
+        <label><span class="req">*</span>计价单位</label>
+        <select v-model="form.unit">
+          <option>箱</option><option>袋</option><option>个</option><option>双</option><option>套</option>
+        </select>
+      </div>
+
+      <div class="mobile-field">
+        <label><span class="req">*</span>每箱数量</label>
+        <input v-model="form.boxQty" placeholder="如：1000" />
+      </div>
+
+      <div class="mobile-field">
+        <label><span class="req">*</span>供货单价（元/单位）</label>
+        <input v-model="form.price" placeholder="如：38.5" />
+      </div>
+
+      <div class="mobile-field">
+        <label>起订量</label>
+        <input v-model="form.moq" placeholder="如：1箱" />
+      </div>
+
+      <div class="mobile-field">
+        <label>可售库存</label>
+        <input v-model="form.stock" placeholder="如：300箱" />
+      </div>
+
+      <div class="mobile-field">
+        <label>条形码（EAN-13）</label>
+        <input v-model="form.barcode" placeholder="有则填，无则留空" maxlength="13" />
+      </div>
+
+      <template v-if="form.l3">
+        <div class="sec-title">类目必填属性（{{ form.l3 }}）</div>
+        <div class="sec-sub">以下为该三级类目在快驴创建商品页要求填写的属性，选错会被驳回</div>
+        <div class="mobile-field" v-for="a in currentAttrs" :key="a.key">
+          <label><span class="req">*</span>{{ a.label }}</label>
+          <select v-if="a.options" v-model="form.attrs[a.key]">
+            <option value="">请选择</option>
+            <option v-for="o in a.options" :key="o" :value="o">{{ o }}</option>
+          </select>
+          <input v-else v-model="form.attrs[a.key]" :placeholder="a.hint || ''" />
+        </div>
+      </template>
+
+      <div class="mobile-field">
+        <label><span class="req">*</span>主图（头图 1 张 + 其他主图，最多 6 张）</label>
+        <div class="photo-grid">
+          <div v-for="(img, i) in form.realPhotos" :key="'rp'+i" class="photo-cell" @click="openUploadSheet('realPhotos')">
+            <img v-if="img" :src="img" />
+            <span v-else>+</span>
+            <span v-if="img" class="del" @click.stop="form.realPhotos.splice(i,1)">×</span>
+          </div>
+          <div v-if="form.realPhotos.length < 6" class="photo-cell" @click="openUploadSheet('realPhotos')">+</div>
+        </div>
+      </div>
+
+      <div class="mobile-field">
+        <label><span class="req">*</span>标签图（含厂名/地址/材质标识，1-3 张）</label>
+        <div class="photo-grid">
+          <div v-for="(img, i) in form.pkgLabels" :key="'pl'+i" class="photo-cell" @click="openUploadSheet('pkgLabels')">
+            <img v-if="img" :src="img" />
+            <span v-else>+</span>
+            <span v-if="img" class="del" @click.stop="form.pkgLabels.splice(i,1)">×</span>
+          </div>
+          <div v-if="form.pkgLabels.length < 3" class="photo-cell" @click="openUploadSheet('pkgLabels')">+</div>
+        </div>
+      </div>
+
+      <div class="mobile-field">
+        <label>详情图（最多 6 张）</label>
+        <div class="photo-grid">
+          <div v-for="(img, i) in form.detailImages" :key="'dt'+i" class="photo-cell" @click="openUploadSheet('detailImages')">
+            <img v-if="img" :src="img" />
+            <span v-else>+</span>
+            <span v-if="img" class="del" @click.stop="form.detailImages.splice(i,1)">×</span>
+          </div>
+          <div v-if="form.detailImages.length < 6" class="photo-cell" @click="openUploadSheet('detailImages')">+</div>
+        </div>
+      </div>
+
+      <div class="mobile-field">
+        <label>食品接触材料检测报告（选填，最多 2 张）</label>
+        <div class="photo-grid">
+          <div v-for="(img, i) in form.reports" :key="'r'+i" class="photo-cell" @click="openUploadSheet('reports')">
+            <img v-if="img" :src="img" />
+            <span v-else>+</span>
+            <span v-if="img" class="del" @click.stop="form.reports.splice(i,1)">×</span>
+          </div>
+          <div v-if="form.reports.length < 2" class="photo-cell" @click="openUploadSheet('reports')">+</div>
+        </div>
+      </div>
+
+      <input type="file" ref="fileInputGallery" accept="image/*" style="display:none" @change="handleFile" />
+      <input type="file" ref="fileInputCamera" accept="image/*" capture="environment" style="display:none" @change="handleFile" />
+
+      <div class="mobile-field">
+        <label>备注/供货说明</label>
+        <textarea v-model="form.remark" rows="3" placeholder="如：可定制颜色/印刷 LOGO、交期 7 天等"></textarea>
+      </div>
+    </div>
+
+    <!-- 我的提交 -->
+    <div v-show="tab==='mine'" class="body">
+      <div v-if="myItems.length === 0" class="mine-empty">还没有提交记录，去「新品录入」提交第一条吧</div>
+      <div v-for="it in myItems" :key="it.id" class="item-card">
+        <div class="thumb">
+          <img v-if="it.realPhotos && it.realPhotos[0]" :src="it.realPhotos[0]" />
+          <span v-else>📦</span>
+        </div>
+        <div class="info">
+          <div class="name">{{ it.spuName }}</div>
+          <div class="meta">{{ it.categoryPath }}<br/>提交：{{ formatTime(it.createdAt) }}</div>
+          <span class="status" :class="it.status">{{ statusLabel(it.status) }}</span>
+          <div v-if="it.status === 'rejected' && it.rejectReason" class="reject-reason">
+            驳回原因：{{ it.rejectReason }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 提交按钮 -->
+    <div v-show="tab==='form'" class="submit-bar">
+      <button class="submit-btn" :disabled="!canSubmit || submitting" @click="submit">
+        {{ submitting ? '提交中…' : '提交审核' }}
+      </button>
+    </div>
+  </template>
+
+  <!-- 图片来源选择弹层 -->
+  <div v-if="uploadSheetVisible" class="sheet-mask" @click="uploadSheetVisible = false">
+    <div class="sheet" @click.stop>
+      <div class="sheet-title">添加图片</div>
+      <div class="sheet-btn" @click="pickFromCamera">📷 拍照</div>
+      <div class="sheet-btn" @click="pickFromGallery">🖼 从相册选择</div>
+      <div class="sheet-btn cancel" @click="uploadSheetVisible = false">取消</div>
+    </div>
+  </div>
+
+  <!-- 品牌搜索弹层 -->
+  <div v-if="brandPickerVisible" class="sheet-mask" @click="brandPickerVisible = false">
+    <div class="sheet" @click.stop>
+      <div class="sheet-title">选择品牌</div>
+      <input class="brand-search" v-model="brandKeyword" placeholder="输入品牌名称搜索" />
+      <div class="brand-list">
+        <div class="brand-item" v-for="(b, i) in brandResults" :key="b.name + i" @click="selectBrand(b)">
+          <span>{{ b.name }}</span>
+          <span class="first" v-if="i === 0">{{ b.custom ? '自定义' : '首条' }}</span>
+        </div>
+        <div class="brand-empty" v-if="brandResults.length === 0">暂无匹配品牌</div>
+      </div>
+      <div class="sheet-btn cancel" @click="brandPickerVisible = false">取消</div>
+    </div>
+  </div>
+</div>
+
+<script src="/lib/vue.global.prod.js"></script>
+<script src="/lib/element-plus.full.min.js"></script>
+<script>
+const { createApp, ref, reactive, computed, onMounted } = Vue;
+
+const now = () => new Date().toISOString();
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+
+/* =============== 快驴类目字段规格（与运营端一致） =============== */
+const CAT_TREE_MAP = {
+  '餐具': ['一次性叉子', '一次性勺子', '一次性筷子', '牙签', '餐具套装', '水晶PP餐具', '牙线', '筷子套'],
+  '餐盒': ['方形餐盒', '圆形餐盒', '多格餐盒', '纸质餐盒', '酱料杯', '餐盒盖子'],
+  '杯子吸管': ['杯子', '吸管', '一次性杯盖'],
+};
+const BRANDS = ['金五缘', '康利达', '三象', '乐亿', '美家', '福瑞斯', '绿之彩', '德乐', '安馨'];
+
+const OPT_COLOR = ['透明', '白色', '黑色', '本色', '彩色', '其他'];
+const OPT_MATERIAL = ['竹制', '塑料', 'PS材质', 'PP材质', '纸质', '其他'];
+const OPT_BOX_MATERIAL = ['PP', 'PS', 'PET', '纸质', '甘蔗浆', '铝箔', '其他'];
+const OPT_YESNO = ['是', '否'];
+const OPT_GRADE = ['优等品', '一等品', '合格品'];
+const OPT_CRAFT = ['注塑', '吸塑', '吹塑', '挤出', '纸浆模塑', '其他'];
+const OPT_STYLE = ['纯色', '印花', '透明', '磨砂', '其他'];
+const OPT_SHAPE = ['方形', '圆形', '多格', '异形'];
+
+const COMMON_ATTRS = [
+  { key: 'importType', label: '国产进口', options: ['国产', '进口'] },
+  { key: 'foodLabel', label: '食材标签', options: ['食品级', '非食品级'] },
+  { key: 'degradable', label: '是否可降解', options: OPT_YESNO },
+  { key: 'transport', label: '运输方式', options: ['常温运输', '冷藏运输', '冷冻运输'] },
+  { key: 'storage', label: '贮存方式', options: ['常温', '阴凉干燥', '冷藏', '冷冻'] },
+  { key: 'shelfLife', label: '保质期', options: ['无保质期', '6个月', '12个月', '18个月', '24个月', '36个月'] },
+  { key: 'pkgName', label: '商品外包装名称', type: 'text', hint: '≤100 字，如：金五缘一次性叉子 1000 只/箱' },
+];
+
+const CAT_ATTRS = {
+  '一次性叉子': [
+    { key: 'color', label: '颜色', options: OPT_COLOR },
+    { key: 'material', label: '材质', options: OPT_MATERIAL },
+  ],
+  '一次性勺子': [
+    { key: 'material', label: '材质', options: OPT_MATERIAL },
+    { key: 'color', label: '颜色', options: OPT_COLOR },
+    { key: 'grade', label: '品质等级', options: OPT_GRADE },
+  ],
+  '一次性筷子': [
+    { key: 'material', label: '材质', options: OPT_MATERIAL },
+    { key: 'grade', label: '品质等级', options: OPT_GRADE },
+    { key: 'withToothpick', label: '是否含牙签', options: OPT_YESNO },
+    { key: 'bagSpec', label: '单袋规格（双数）', type: 'text', hint: '如：10 双/袋' },
+  ],
+  '牙签': [
+    { key: 'material', label: '材质', options: OPT_MATERIAL },
+  ],
+  '餐具套装': [
+    { key: 'withSpoon', label: '是否含勺子', options: OPT_YESNO },
+    { key: 'withNapkin', label: '是否含餐巾纸', options: OPT_YESNO },
+    { key: 'withWetWipe', label: '是否含湿纸巾', options: OPT_YESNO },
+    { key: 'withFork', label: '是否含叉子', options: OPT_YESNO },
+    { key: 'withChopsticks', label: '是否含筷子', options: OPT_YESNO },
+    { key: 'withToothpick', label: '是否含牙签', options: OPT_YESNO },
+    { key: 'withCard', label: '是否带卡片', options: OPT_YESNO },
+    { key: 'degradable', label: '是否可降解', options: OPT_YESNO },
+  ],
+  '水晶PP餐具': [],
+  '牙线': [],
+  '筷子套': [],
+  '方形餐盒': [
+    { key: 'boxMaterial', label: '餐盒材质', options: OPT_BOX_MATERIAL },
+    { key: 'antiTheft', label: '是否有防盗扣', options: OPT_YESNO },
+    { key: 'grade', label: '品质等级', options: OPT_GRADE },
+    { key: 'craft', label: '工艺', options: OPT_CRAFT },
+    { key: 'withLid', label: '是否带盖', options: OPT_YESNO },
+    { key: 'color', label: '颜色', options: OPT_COLOR },
+    { key: 'style', label: '风格', options: OPT_STYLE },
+    { key: 'capacity', label: '容量', type: 'text', hint: '如：500（ml）' },
+    { key: 'degradable', label: '是否可降解', options: OPT_YESNO },
+    { key: 'boxModel', label: '餐盒型号', type: 'text', hint: '如：FQ-750' },
+    { key: 'boxShape', label: '餐盒形状', options: OPT_SHAPE },
+  ],
+  '圆形餐盒': [
+    { key: 'boxMaterial', label: '餐盒材质', options: OPT_BOX_MATERIAL },
+    { key: 'antiTheft', label: '是否有防盗扣', options: OPT_YESNO },
+    { key: 'grade', label: '品质等级', options: OPT_GRADE },
+    { key: 'craft', label: '工艺', options: OPT_CRAFT },
+    { key: 'withLid', label: '是否带盖', options: OPT_YESNO },
+    { key: 'boxShape', label: '餐盒形状', options: OPT_SHAPE },
+    { key: 'color', label: '颜色', options: OPT_COLOR },
+    { key: 'style', label: '风格', options: OPT_STYLE },
+    { key: 'capacity', label: '容量', type: 'text', hint: '如：750（ml）' },
+    { key: 'degradable', label: '是否可降解', options: OPT_YESNO },
+    { key: 'boxModel', label: '餐盒型号', type: 'text', hint: '如：YY-750' },
+  ],
+  '多格餐盒': [
+    { key: 'craft', label: '工艺', options: OPT_CRAFT },
+    { key: 'withLid', label: '是否带盖', options: OPT_YESNO },
+    { key: 'boxShape', label: '餐盒形状', options: OPT_SHAPE },
+    { key: 'boxMaterial', label: '餐盒材质', options: OPT_BOX_MATERIAL },
+    { key: 'grade', label: '品质等级', options: OPT_GRADE },
+    { key: 'color', label: '颜色', options: OPT_COLOR },
+    { key: 'style', label: '风格', options: OPT_STYLE },
+    { key: 'capacity', label: '容量', type: 'text', hint: '如：总 1000（ml）' },
+    { key: 'degradable', label: '是否可降解', options: OPT_YESNO },
+    { key: 'boxModel', label: '餐盒型号', type: 'text', hint: '如：DG-3' },
+  ],
+  '纸质餐盒': [
+    { key: 'withLid', label: '是否带盖', options: OPT_YESNO },
+    { key: 'boxMaterial', label: '餐盒材质', options: OPT_BOX_MATERIAL },
+    { key: 'boxShape', label: '餐盒形状', options: OPT_SHAPE },
+    { key: 'grade', label: '品质等级', options: OPT_GRADE },
+    { key: 'color', label: '颜色', options: OPT_COLOR },
+    { key: 'capacity', label: '容量', type: 'text', hint: '如：500（ml）' },
+    { key: 'style', label: '风格', options: OPT_STYLE },
+    { key: 'boxModel', label: '餐盒型号', type: 'text', hint: '如：ZZ-500' },
+  ],
+  '酱料杯': [
+    { key: 'craft', label: '工艺', options: OPT_CRAFT },
+    { key: 'height', label: '尺寸-高', type: 'text', hint: '如：45（mm）' },
+    { key: 'boxShape', label: '餐盒形状', options: OPT_SHAPE },
+    { key: 'boxMaterial', label: '餐盒材质', options: OPT_BOX_MATERIAL },
+    { key: 'grade', label: '品质等级', options: OPT_GRADE },
+    { key: 'color', label: '颜色', options: OPT_COLOR },
+    { key: 'capacity', label: '容量', type: 'text', hint: '如：50（ml）' },
+    { key: 'degradable', label: '是否可降解', options: OPT_YESNO },
+    { key: 'style', label: '风格', options: OPT_STYLE },
+    { key: 'boxModel', label: '餐盒型号', type: 'text', hint: '如：JL-50' },
+  ],
+  '餐盒盖子': [
+    { key: 'bowlType', label: '适用碗型', type: 'text', hint: '如：适配 500ml 圆形碗' },
+    { key: 'boxMaterial', label: '餐盒材质', options: OPT_BOX_MATERIAL },
+    { key: 'color', label: '颜色', options: OPT_COLOR },
+    { key: 'degradable', label: '是否可降解', options: OPT_YESNO },
+    { key: 'style', label: '风格', options: OPT_STYLE },
+    { key: 'boxModel', label: '餐盒型号', type: 'text', hint: '如：G-500' },
+  ],
+  '杯子': [
+    { key: 'degradable', label: '是否可降解', options: OPT_YESNO },
+    { key: 'height', label: '尺寸-高', type: 'text', hint: '如：95（mm）' },
+    { key: 'color', label: '颜色', options: OPT_COLOR },
+    { key: 'capacity', label: '容量', type: 'text', hint: '如：350（ml）' },
+    { key: 'material', label: '材质', options: OPT_MATERIAL },
+  ],
+  '吸管': [
+    { key: 'bendy', label: '是否带弯头', options: OPT_YESNO },
+    { key: 'color', label: '颜色', options: OPT_COLOR },
+    { key: 'material', label: '材质', options: OPT_MATERIAL },
+    { key: 'degradable', label: '是否可降解', options: OPT_YESNO },
+  ],
+  '一次性杯盖': [
+    { key: 'diameter', label: '尺寸直径', type: 'text', hint: '如：90（mm）' },
+    { key: 'color', label: '颜色', options: OPT_COLOR },
+    { key: 'material', label: '材质', options: OPT_MATERIAL },
+    { key: 'degradable', label: '是否可降解', options: OPT_YESNO },
+  ],
+};
+
+const STATUS_LABELS = { draft: '草稿', pending: '待审核', rejected: '已驳回', ready: '待上架', listed: '已上架', offline: '已下架' };
+
+/* 请求封装：自动携带厂家会话 token */
+async function api(url, opts = {}) {
+  opts.headers = Object.assign({}, opts.headers);
+  if (opts.body && typeof opts.body === 'string') opts.headers['Content-Type'] = 'application/json';
+  const tok = sessionStorage.getItem('kl_vendor_token') || '';
+  if (tok) opts.headers['X-Vendor-Token'] = tok;
+  let resp;
+  try {
+    resp = await fetch(url, opts);
+  } catch (e) {
+    const err = new Error('网络异常，请检查网络后重试');
+    err.network = true;
+    throw err;
+  }
+  let j = null;
+  try { j = await resp.json(); } catch (e) {}
+  if (!resp.ok || (j && j.ok === false)) {
+    const err = new Error((j && j.error) || ('请求失败 (' + resp.status + ')'));
+    err.status = resp.status;
+    throw err;
+  }
+  return j;
+}
+
+function emptyForm() {
+  return {
+    l2: '', l3: '',
+    spuName: '', brand: '', sellingPoints: '',
+    specName: '', unit: '箱', boxQty: '', price: '', moq: '', stock: '', barcode: '',
+    attrs: {},
+    pkgLabels: [], realPhotos: [], detailImages: [], reports: [], remark: '',
+  };
+}
+
+createApp({
+  setup() {
+    const loggedIn = ref(false);
+    const loggingIn = ref(false);
+    const account = ref('');
+    const password = ref('');
+    const supplier = ref({});
+    const tab = ref('form');
+    const myItems = ref([]);
+    const submitting = ref(false);
+
+    const form = reactive(emptyForm());
+    const categoryKeys = Object.keys(CAT_TREE_MAP);
+    const l3Options = computed(() => CAT_TREE_MAP[form.l2] || []);
+    const currentAttrs = computed(() => {
+      if (!form.l3) return [];
+      const list = [...(CAT_ATTRS[form.l3] || []), ...COMMON_ATTRS];
+      const seen = {};
+      return list.filter(a => (seen[a.key] ? false : (seen[a.key] = true)));
+    });
+    function onL2Change() { form.l3 = ''; form.attrs = {}; }
+
+    /* 品牌弹层 */
+    const brandPickerVisible = ref(false);
+    const brandKeyword = ref('');
+    const brandResults = computed(() => {
+      const k = brandKeyword.value.trim();
+      if (!k) return BRANDS.slice(0, 8).map(b => ({ name: b, custom: false }));
+      const hit = BRANDS.filter(b => b.includes(k)).map(b => ({ name: b, custom: false }));
+      return hit.length ? hit : [{ name: k, custom: true }];
+    });
+    function openBrandPicker() { brandKeyword.value = ''; brandPickerVisible.value = true; }
+    function selectBrand(b) { form.brand = b.name; brandPickerVisible.value = false; }
+
+    /* 上传 */
+    const uploadSheetVisible = ref(false);
+    const uploadTarget = ref('');
+    const fileInputGallery = ref(null);
+    const fileInputCamera = ref(null);
+    function openUploadSheet(target) { uploadTarget.value = target; uploadSheetVisible.value = true; }
+    function pickFromCamera() { uploadSheetVisible.value = false; fileInputCamera.value && fileInputCamera.value.click(); }
+    function pickFromGallery() { uploadSheetVisible.value = false; fileInputGallery.value && fileInputGallery.value.click(); }
+    async function handleFile(e) {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const target = uploadTarget.value;
+      const LIMITS = { pkgLabels: 3, reports: 2, detailImages: 6, realPhotos: 6 };
+      const arr = form[target];
+      if (arr.length >= (LIMITS[target] || 6)) { e.target.value = ''; return; }
+      let url = '';
+      try {
+        const fd = new FormData();
+        fd.append('file', file);
+        const j = await api('/api/upload', { method: 'POST', body: fd });
+        url = j.url;
+      } catch (err) {
+        if (err.status === 401) { doLogout(); e.target.value = ''; return; }
+        /* 上传失败退回本地预览，提交时仍会整体校验 */
+        url = await new Promise(res => {
+          const fr = new FileReader();
+          fr.onload = () => res(fr.result);
+          fr.readAsDataURL(file);
+        });
+      }
+      arr.push(url);
+      e.target.value = '';
+    }
+
+    /* 校验 */
+    const canSubmit = computed(() => {
+      if (!(form.l2 && form.l3 && form.spuName && form.brand &&
+            form.sellingPoints && form.specName && form.boxQty && form.price)) return false;
+      const attrsOk = currentAttrs.value.every(a => (form.attrs[a.key] || '').toString().trim() !== '');
+      return attrsOk && form.pkgLabels.length >= 1 && form.realPhotos.length >= 1;
+    });
+
+    /* 登录 / 退出 */
+    async function doLogin() {
+      const acc = account.value.trim();
+      const pwd = password.value.trim();
+      if (!acc || !pwd) { ElementPlus.ElMessage.warning('请输入账号和密码'); return; }
+      loggingIn.value = true;
+      try {
+        const j = await api('/api/login', { method: 'POST', body: JSON.stringify({ account: acc, password: pwd }) });
+        sessionStorage.setItem('kl_vendor_token', j.token);
+        supplier.value = j.supplier;
+        loggedIn.value = true;
+        account.value = '';
+        password.value = '';
+        await loadMyItems();
+      } catch (e) {
+        ElementPlus.ElMessage.error(e.message || '账号或密码错误');
+      } finally {
+        loggingIn.value = false;
+      }
+    }
+    function doLogout() {
+      sessionStorage.removeItem('kl_vendor_token');
+      loggedIn.value = false;
+      supplier.value = {};
+      myItems.value = [];
+      tab.value = 'form';
+      Object.assign(form, emptyForm());
+    }
+
+    async function loadMyItems() {
+      try {
+        const j = await api('/api/my/items');
+        supplier.value = j.supplier;
+        myItems.value = j.items || [];
+      } catch (e) {
+        if (e.status === 401) { doLogout(); return; }
+        ElementPlus.ElMessage.error(e.message || '加载失败');
+      }
+    }
+    function switchMine() {
+      tab.value = 'mine';
+      loadMyItems();
+    }
+
+    /* 提交审核 */
+    async function submit() {
+      if (!canSubmit.value || submitting.value) return;
+      submitting.value = true;
+      try {
+        const item = {
+          id: uid(),
+          status: 'pending',
+          supplierId: supplier.value.id,
+          supplierName: supplier.value.name,
+          ...JSON.parse(JSON.stringify(form)),
+          category: ['餐厨用品', '一次性餐具', form.l2, form.l3],
+          categoryPath: '餐厨用品 / 一次性餐具 / ' + form.l2 + ' / ' + form.l3,
+          attrs: JSON.parse(JSON.stringify(form.attrs)),
+          createdAt: now(),
+          updatedAt: now(),
+          review: null,
+          listingSkuName: '',
+          listingSkuTitle: '',
+          platformId: '',
+          platformUrl: '',
+          rejectReason: '',
+          listings: [],
+        };
+        await api('/api/items', { method: 'POST', body: JSON.stringify({ item }) });
+        ElementPlus.ElMessage.success('提交成功，运营审核后通知你');
+        Object.assign(form, emptyForm());
+        await loadMyItems();
+        tab.value = 'mine';
+      } catch (e) {
+        if (e.status === 401) { doLogout(); return; }
+        ElementPlus.ElMessage.error(e.message || '提交失败，请重试');
+      } finally {
+        submitting.value = false;
+      }
+    }
+
+    function statusLabel(s) { return STATUS_LABELS[s] || s; }
+    function formatTime(t) {
+      if (!t) return '';
+      const d = new Date(t);
+      const pad = n => n.toString().padStart(2, '0');
+      return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) +
+             ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+    }
+
+    /* 已登录过：自动恢复会话 */
+    onMounted(async () => {
+      if (sessionStorage.getItem('kl_vendor_token')) {
+        try {
+          const j = await api('/api/my/items');
+          supplier.value = j.supplier;
+          myItems.value = j.items || [];
+          loggedIn.value = true;
+        } catch (e) {
+          sessionStorage.removeItem('kl_vendor_token');
+        }
+      }
+    });
+
+    return {
+      loggedIn, loggingIn, account, password, supplier, tab, myItems, submitting,
+      form, categoryKeys, l3Options, currentAttrs, onL2Change,
+      brandPickerVisible, brandKeyword, brandResults, openBrandPicker, selectBrand,
+      uploadSheetVisible, fileInputGallery, fileInputCamera,
+      openUploadSheet, pickFromCamera, pickFromGallery, handleFile,
+      canSubmit, doLogin, doLogout, switchMine, submit,
+      statusLabel, formatTime,
+    };
+  },
+}).mount('#app');
+</script>
+</body>
+</html>

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<title>连接服务器</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #f5f7fa;
+    color: #1f2937;
+    padding: 36px 32px;
+  }
+  .logo { font-size: 38px; text-align: center; }
+  h1 { font-size: 18px; text-align: center; margin: 10px 0 4px; }
+  .sub { font-size: 12px; color: #909399; text-align: center; margin-bottom: 26px; }
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 13px; color: #606266; margin-bottom: 6px; }
+  .field label .req { color: #f56c6c; margin-right: 2px; }
+  .field input {
+    width: 100%;
+    border: 1px solid #dcdfe6;
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 14px;
+    font-family: inherit;
+    background: #fff;
+  }
+  .field input:focus { outline: none; border-color: #1f5dd0; }
+  .field .hint { font-size: 11px; color: #c0c4cc; margin-top: 4px; }
+  .err {
+    display: none;
+    background: #fef0f0;
+    border: 1px solid #fde2e2;
+    color: #f56c6c;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 12px;
+    margin-bottom: 14px;
+  }
+  button {
+    width: 100%;
+    background: #1f5dd0;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 11px 0;
+    font-size: 15px;
+    cursor: pointer;
+    margin-top: 6px;
+  }
+  button:disabled { background: #c0c4cc; cursor: default; }
+  .foot { margin-top: 18px; font-size: 11px; color: #c0c4cc; text-align: center; line-height: 1.8; }
+</style>
+</head>
+<body>
+  <div class="logo">🍱</div>
+  <h1>餐厨产品录入系统</h1>
+  <div class="sub">首次使用，请连接贵司的专属服务器</div>
+
+  <div class="err" id="err"></div>
+
+  <div class="field">
+    <label><span class="req">*</span>服务器地址</label>
+    <input id="serverUrl" placeholder="例如：https://your-company.com" autocomplete="off" />
+    <div class="hint">由系统管理员提供，每个客户一个独立地址</div>
+  </div>
+  <div class="field">
+    <label><span class="req">*</span>运营授权码</label>
+    <input id="token" type="password" placeholder="kl_ 开头的一串字符" autocomplete="off" />
+    <div class="hint">由系统管理员提供；浏览器没有授权码无法打开本系统</div>
+  </div>
+  <div class="field">
+    <label>审核人姓名</label>
+    <input id="operator" placeholder="例如：张三" autocomplete="off" />
+    <div class="hint">用于审核留痕（谁在何时通过/驳回了哪个商品），可后续按 Alt → 选项 → 重新配置修改</div>
+  </div>
+
+  <button id="btn">连接并保存</button>
+
+  <div class="foot">配置保存在本机，仅对填写的服务器地址生效<br/>更换电脑或更换客户时按 Ctrl+Shift+S 重新配置</div>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+  const errBox = $('err');
+
+  function showErr(msg) {
+    errBox.textContent = msg;
+    errBox.style.display = msg ? 'block' : 'none';
+  }
+
+  async function init() {
+    try {
+      const cfg = await window.klConfig.load();
+      if (cfg) {
+        $('serverUrl').value = (cfg.serverUrl || '').replace(/\/+$/, '');
+        $('token').value = cfg.token || '';
+        $('operator').value = cfg.operator || '';
+      }
+    } catch (e) { /* 忽略 */ }
+    $('serverUrl').focus();
+  }
+
+  $('btn').addEventListener('click', async () => {
+    showErr('');
+    const form = {
+      serverUrl: $('serverUrl').value,
+      token: $('token').value,
+      operator: $('operator').value,
+    };
+    if (!form.serverUrl.trim() || !form.token.trim()) {
+      showErr('请填写服务器地址和运营授权码');
+      return;
+    }
+    $('btn').disabled = true;
+    $('btn').textContent = '正在连接验证…';
+    try {
+      const r = await window.klConfig.save(form);
+      if (!r || !r.ok) {
+        showErr((r && r.error) || '保存失败');
+        $('btn').disabled = false;
+        $('btn').textContent = '连接并保存';
+      }
+      // 成功则主进程会关闭本窗口并打开系统主界面
+    } catch (e) {
+      showErr('保存失败：' + (e.message || e));
+      $('btn').disabled = false;
+      $('btn').textContent = '连接并保存';
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') $('btn').click();
+  });
+
+  init();
+</script>
+</body>
+</html>
